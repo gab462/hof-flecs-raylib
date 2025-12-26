@@ -1,28 +1,29 @@
+#include <config.h>
+#include <cut.h>
+#include <errno.h>
+#include <message.h>
+#include <sock.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <task.h>
 #include <tcp_task.h>
-#include <sock.h>
-#include <cut.h>
 
-bool
-message_handler(int fd, struct sockaddr_in addr, void **data)
+bool message_handler(int fd, struct sockaddr_in addr, void** data)
 {
-    struct handler *self = (struct tcp_cli_conn *) interface;
-    char **bytes = (char **) data;
+    char** bytes = (char**)data;
 
-    ssize_t received = sock_read(self->fd, bytes);
+    ssize_t received = sock_read(fd, bytes);
 
-    if(received == 0 || (received == -1 && errno != EAGAIN)){ // Connection closed or error
+    if (received == 0 || (received == -1 && errno != EAGAIN)) { // Connection closed or error
         perror("Lost connection");
-        close(self->fd);
+        close(fd);
         da_reset(bytes);
-        return(true);
+        return (true);
     }
 
-    while(len(*bytes) > sizeof(struct message)){
+    while (len(*bytes) > sizeof(struct message)) {
         struct message msg;
         memcpy(&msg, *bytes, sizeof(struct message));
 
@@ -33,22 +34,19 @@ message_handler(int fd, struct sockaddr_in addr, void **data)
         da_header(*bytes)->length -= sizeof(struct message);
     }
 
-    return(false);
+    return false;
 }
 
-int
-main(void)
+int main(void)
 {
-    short port = atoi(PORT);
+    struct task* task = tcp_server(PORT, message_handler);
 
-    struct task *task = tcp_server(PORT, message_handler);
+    printf("Listening on %s:%d...\n", IP, PORT);
 
-    printf("Listening on %s:%s...\n", IP, PORT);
-
-    while(!task_poll(task))
+    while (!task_poll(task))
         usleep(8000);
 
     free(task);
 
-    return(0);
+    return 0;
 }

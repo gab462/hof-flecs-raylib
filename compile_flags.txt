@@ -3,6 +3,7 @@ clang
 -Wshadow
 -std=gnu11
 -Iinclude
--Iinclude/client/
--Ilib/flecs/distr/
+-Iinclude/client
+-Ilib/flecs/distr
 -Ilib/raylib/src
+-Ilib/cut
