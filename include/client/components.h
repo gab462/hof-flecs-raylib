@@ -1,5 +1,7 @@
 #pragma once
 
+#include <raylib.h>
+
 typedef struct {
     float value;
 } FloatValue;
@@ -22,7 +24,7 @@ typedef struct {
 } Controls;
 
 typedef struct {
-    ModelAnimation *animations;
+    ModelAnimation* animations;
     int count;
     int current;
     int frame;

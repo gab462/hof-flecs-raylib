@@ -1,6 +1,10 @@
 #pragma once
 
-struct message_hello {};
+#include <raylib.h>
+#include <stdbool.h>
+#include <stdint.h>
+
+struct message_hello { };
 
 struct message_welcome {
     uint64_t to_id;
@@ -59,14 +63,14 @@ enum message_type {
 };
 
 union message_data {
-    struct message_hello;
-    struct message_welcome;
-    struct message_get_state;
-    struct message_sync;
-    struct message_turning_right;
-    struct message_turning_left;
-    struct message_walking_forward;
-    struct message_walking_backward;
+    struct message_hello hello;
+    struct message_welcome welcome;
+    struct message_get_state get_state;
+    struct message_sync sync;
+    struct message_turning_right turning_right;
+    struct message_turning_left turning_left;
+    struct message_walking_forward walking_forward;
+    struct message_walking_backward walking_backward;
 };
 
 struct message {
