@@ -1,9 +1,8 @@
 #include <raylib.h>
-#include <raymath.h>
 #include <flecs.h>
-#include "config.c"
-#include "components.c"
-#include "systems.c"
+#include <config.h>
+#include <components.h>
+#include <systems.h>
 
 int
 main(void)

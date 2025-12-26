@@ -1,3 +1,12 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <task.h>
+#include <tcp_task.h>
+#include <sock.h>
+#include <cut.h>
+
 bool
 message_handler(int fd, struct sockaddr_in addr, void **data)
 {

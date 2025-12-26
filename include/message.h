@@ -1,3 +1,5 @@
+#pragma once
+
 struct message_hello {};
 
 struct message_welcome {

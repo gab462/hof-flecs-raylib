@@ -1,3 +1,9 @@
+#include <flecs.h>
+#include <raylib.h>
+#include <raymath.h>
+#include <math.h>
+#include <components.h>
+
 void
 RenderModel(ecs_iter_t *it)
 {
