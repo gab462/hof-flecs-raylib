@@ -1,3 +1,4 @@
+#include <systems.h>
 #include <components.h>
 #include <flecs.h>
 #include <math.h>

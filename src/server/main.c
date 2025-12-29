@@ -10,9 +10,11 @@
 #include <task.h>
 #include <tcp_task.h>
 
-bool message_handler(int fd, struct sockaddr_in addr, void** data)
+void message_handler(struct task_context *ctx, int fd, struct sockaddr_in addr)
 {
-    char** bytes = (char**)data;
+    char **bytes = task_ctx_alloc(ctx, char *);
+
+    task_begin(ctx);
 
     ssize_t received = sock_read(fd, bytes);
 
@@ -20,7 +22,7 @@ bool message_handler(int fd, struct sockaddr_in addr, void** data)
         perror("Lost connection");
         close(fd);
         da_reset(bytes);
-        return (true);
+        task_abort(ctx);
     }
 
     while (len(*bytes) > sizeof(struct message)) {
@@ -30,23 +32,28 @@ bool message_handler(int fd, struct sockaddr_in addr, void** data)
         // TODO: process msg
 
         // Discard processsed message
-        memmove(*bytes, *bytes + sizeof(struct message), da_len(*bytes) - sizeof(struct message));
+        memmove(*bytes, *bytes + sizeof(struct message),
+                len(*bytes) - sizeof(struct message));
         da_header(*bytes)->length -= sizeof(struct message);
     }
 
-    return false;
+    task_return(ctx);
+
+    task_end(ctx);
 }
 
 int main(void)
 {
-    struct task* task = tcp_server(PORT, message_handler);
+    int fd = tcp_listen(PORT);
+    assert(fd != -1);
 
     printf("Listening on %s:%d...\n", IP, PORT);
 
-    while (!task_poll(task))
+    struct task ctx = {0};
+    for (;;) {
+        tcp_server(&ctx, PORT, message_handler);
         usleep(8000);
-
-    free(task);
+    }
 
     return 0;
 }
