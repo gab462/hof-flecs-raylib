@@ -1,7 +1,7 @@
-COMMON_CFLAGS := -Wall -Wextra -Wshadow -std=gnu11 -I include
+COMMON_CFLAGS := -Wall -Wextra -Wno-unused-parameter -std=gnu11 -I include
 COMMON_HDR := include/config.h include/message.h
 
-CLIENT_CFLAGS := $(COMMON_CFLAGS) -I include/client/ -I lib/flecs/distr/ -I lib/raylib/src/ -lm
+CLIENT_CFLAGS := $(COMMON_CFLAGS) -I include/client/ -I lib/flecs/distr/ -I lib/raylib/src/ -I lib/raygui/src/ -lm
 CLIENT_HDR := $(COMMON_HDR) include/client/components.h include/client/systems.h
 CLIENT_SRC := src/client/main.c src/client/systems.c lib/flecs/distr/flecs.c lib/raylib/src/libraylib.a
 

@@ -1,8 +1,69 @@
+#define RAYGUI_IMPLEMENTATION
+
 #include <components.h>
 #include <config.h>
 #include <flecs.h>
 #include <raylib.h>
+#include <raygui.h>
 #include <systems.h>
+#include <message.h>
+#include <globals.h>
+
+struct globals globals = {
+    .name = "username",
+    .host = "127.0.0.1",
+    .port = "8172",
+};
+
+void
+LoginScreen(void)
+{
+    int widget_height = 40;
+    int widget_padding = 10;
+
+    Rectangle widget_pos = {
+        .x = widget_padding,
+        .height = widget_height
+    };
+
+    bool edit_name = false;
+    bool edit_host = false;
+    bool edit_port = false;
+
+    GuiSetStyle(DEFAULT, TEXT_SIZE, 20);
+
+    while (!globals.is_connected && !WindowShouldClose()) {
+        BeginDrawing();
+
+        ClearBackground(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)));
+
+        widget_pos.y = widget_padding;
+
+        widget_pos.width = 500;
+
+        if(GuiTextBox(widget_pos, globals.name, sizeof(globals.name), edit_name))
+            edit_name = !edit_name;
+        widget_pos.y += widget_height + widget_padding;
+
+        if(GuiTextBox(widget_pos, globals.host, sizeof(globals.host), edit_host))
+            edit_host = !edit_host;
+        widget_pos.y += widget_height + widget_padding;
+
+        if(GuiTextBox(widget_pos, globals.port, sizeof(globals.port), edit_port))
+            edit_port = !edit_port;
+        widget_pos.y += widget_height + widget_padding;
+
+        widget_pos.width = 200;
+        if(GuiButton(widget_pos, "Connect")){
+            // TODO: tcp_connect() and handle if connection not successful
+            globals.is_connected = true;
+        };
+
+        EndDrawing();
+    }
+
+    TraceLog(LOG_INFO, "Name: %s, Host: %s, Port: %s", globals.name, globals.host, globals.port);
+}
 
 int main(void)
 {
@@ -10,9 +71,7 @@ int main(void)
 
     SetTargetFPS(60);
 
-    // TODO: user input for host and port
-
-    // TODO: tcp_connect() with feedback and handle if connection not successful
+    LoginScreen();
 
     ecs_world_t* ctx = ecs_init();
 
@@ -51,7 +110,11 @@ int main(void)
         ecs_value(WalkingSpeed, { 10.f }),
         ecs_value(RotationSpeed, { 1.f }),
         ecs_value(Controls, { 0 }),
-        ecs_value(AnimationState, { .animations = player_model_anims, .count = player_model_anim_count, .current = PLAYER_IDLE_ANIMATION }),
+        ecs_value(AnimationState, {
+            .animations = player_model_anims,
+            .count = player_model_anim_count,
+            .current = PLAYER_IDLE_ANIMATION
+        }),
         (ecs_value_t) { ecs_id(Model), &player_model });
 
     ecs_set(ctx, player, Player, { .camera = { .up = { 0.f, 1.f, 0.f }, .fovy = 45.f, .projection = CAMERA_PERSPECTIVE }, .distance = 15.f });

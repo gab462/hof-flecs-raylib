@@ -7,3 +7,6 @@
 [submodule "lib/cut"]
 	path = lib/cut
 	url = git@github.com:gab462/cut.git
+[submodule "lib/raygui"]
+	path = lib/raygui
+	url = https://github.com/raysan5/raygui.git
