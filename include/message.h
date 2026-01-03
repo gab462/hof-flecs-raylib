@@ -18,6 +18,10 @@ struct message_welcome {
     bool accepted;
 };
 
+struct message_goodbye {
+    char from_id[ID_BUF_LEN];
+};
+
 struct message_get_state {
     char from_id[ID_BUF_LEN];
 };
@@ -62,6 +66,7 @@ struct message_walking_backward {
 enum message_type {
     MESSAGE_HELLO,
     MESSAGE_WELCOME,
+    MESSAGE_GOODBYE,
     MESSAGE_GET_STATE,
     MESSAGE_SYNC,
     MESSAGE_TURNING_RIGHT,
@@ -73,6 +78,7 @@ enum message_type {
 union message_data {
     struct message_hello hello;
     struct message_welcome welcome;
+    struct message_goodbye goodbye;
     struct message_get_state get_state;
     struct message_sync sync;
     struct message_turning_right turning_right;
@@ -106,6 +112,9 @@ send_message_impl(char** send_buf, struct message msg, struct message_opt opt)
             break;
         case MESSAGE_WELCOME:
             snprintf(msg.data.welcome.to_id, ID_BUF_LEN, "%s", opt.to_id);
+            break;
+        case MESSAGE_GOODBYE:
+            snprintf(msg.data.goodbye.from_id, ID_BUF_LEN, "%s", opt.from_id);
             break;
         case MESSAGE_GET_STATE:
             snprintf(msg.data.get_state.from_id, ID_BUF_LEN, "%s", opt.from_id);

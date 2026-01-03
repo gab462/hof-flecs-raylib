@@ -1,6 +1,9 @@
 #include <components.h>
+#include <cut.h>
 #include <flecs.h>
+#include <globals.h>
 #include <math.h>
+#include <message.h>
 #include <raylib.h>
 #include <raymath.h>
 #include <systems.h>
@@ -28,11 +31,21 @@ void Move(ecs_iter_t* it)
 
     for (int i = 0; i < it->count; i++) {
         if (c[i].state & WALKING_FORWARD) {
-            p[i] = Vector3Add(p[i], (Vector3) { ws[i].value * it->delta_time * d[i].x, 0.f, ws[i].value * it->delta_time * d[i].y });
+            p[i] = Vector3Add(p[i],
+                (Vector3) {
+                    ws[i].value * it->delta_time * d[i].x,
+                    0.f,
+                    ws[i].value * it->delta_time * d[i].y,
+                });
         }
 
         if (c[i].state & WALKING_BACKWARD) {
-            p[i] = Vector3Add(p[i], (Vector3) { -ws[i].value * it->delta_time * d[i].x, 0.f, -ws[i].value * it->delta_time * d[i].y });
+            p[i] = Vector3Add(p[i],
+                (Vector3) {
+                    -ws[i].value * it->delta_time * d[i].x,
+                    0.f,
+                    -ws[i].value * it->delta_time * d[i].y,
+                });
         }
 
         if (c[i].state & TURNING_RIGHT) {
@@ -66,7 +79,7 @@ void MoveCamera(ecs_iter_t* it)
         pl[i].camera.position = (Vector3) {
             p[i].x - d[i].x * pl[i].distance,
             pl[i].distance / 2.f,
-            p[i].z - d[i].y * pl[i].distance
+            p[i].z - d[i].y * pl[i].distance,
         };
 
         pl[i].camera.target = p[i];
@@ -79,12 +92,23 @@ void KeyboardControls(ecs_iter_t* it)
     // Player *p = ecs_field(it, Player, 1);
 
     for (int i = 0; i < it->count; i++) {
-        // TODO: send message
-        // EnqueueMessage(WalkingForward(player_id, false));
+        // TODO: send message instead of changing state in place
+        // (sync with animation state)
+        // if (IsKeyPressed(KEY_W)) {
+        //     enqueue_message(&globals.message_queue,
+        //         ((struct message) {
+        //             .type = MESSAGE_WALKING_FORWARD,
+        //             .data.walking_forward.state = true,
+        //         }), .from_id = globals.name);
+        //
+        //     send_message(&globals.send_buf,
+        //         ((struct message) {
+        //             .type = MESSAGE_WALKING_FORWARD,
+        //             .data.walking_forward.state = true,
+        //         }), .from_id = globals.name);
+        // }
 
-        c->state = IsKeyDown(KEY_W)
-            | (IsKeyDown(KEY_S) << 1)
-            | (IsKeyDown(KEY_D) << 2)
-            | (IsKeyDown(KEY_A) << 3);
+        c->state
+            = IsKeyDown(KEY_W) | (IsKeyDown(KEY_S) << 1) | (IsKeyDown(KEY_D) << 2) | (IsKeyDown(KEY_A) << 3);
     }
 }

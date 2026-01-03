@@ -60,6 +60,9 @@ void MessageProcessor(void)
                 globals.server_fd = -1;
             }
             break;
+        case MESSAGE_GOODBYE:
+            // TODO: remove entity
+            break;
         case MESSAGE_GET_STATE:
             // TODO: respond with MESSAGE_SYNC
             break;
@@ -183,7 +186,6 @@ int main(void)
     ECS_SYSTEM(ctx, MoveCamera, EcsOnUpdate,
         [in] Position, [in] Direction, Player);
 
-    // TODO: Keyboard input create messages instead of updating in place
     // TODO: HUD task with connection status
     // TODO: Render player name above model
 
@@ -197,10 +199,21 @@ int main(void)
         ecs_value(WalkingSpeed, { 10.f }),
         ecs_value(RotationSpeed, { 1.f }),
         ecs_value(Controls, { 0 }),
-        ecs_value(AnimationState, { .animations = player_model_anims, .count = player_model_anim_count, .current = PLAYER_IDLE_ANIMATION }),
+        ecs_value(AnimationState, {
+                                      .animations = player_model_anims,
+                                      .count = player_model_anim_count,
+                                      .current = PLAYER_IDLE_ANIMATION,
+                                  }),
         (ecs_value_t) { ecs_id(Model), &player_model });
 
-    ecs_set(ctx, player, Player, { .camera = { .up = { 0.f, 1.f, 0.f }, .fovy = 45.f, .projection = CAMERA_PERSPECTIVE }, .distance = 15.f });
+    ecs_set(ctx,
+        player, Player,
+        { .camera = {
+              .up = { 0.f, 1.f, 0.f },
+              .fovy = 45.f,
+              .projection = CAMERA_PERSPECTIVE,
+          },
+            .distance = 15.f });
 
     const Player* camera_state = ecs_get(ctx, player, Player);
     const Camera* camera = &camera_state->camera;

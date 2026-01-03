@@ -28,7 +28,7 @@ void message_handler(struct task_context* ctx, int fd, struct sockaddr_in addr)
         ssize_t received = sock_read(fd, recv_buf);
 
         if (received == 0 || (received == -1 && errno != EAGAIN)) { // Connection closed or error
-            // TODO: broadcast that player left
+            // TODO: broadcast goodbye
             perror("Lost connection");
             close(fd);
             da_reset(recv_buf);
@@ -60,6 +60,14 @@ void message_handler(struct task_context* ctx, int fd, struct sockaddr_in addr)
                 close(fd);
                 da_reset(recv_buf);
                 task_abort(ctx);
+                // TODO: broadcast goodbye
+                break;
+            case MESSAGE_GOODBYE:
+                printf("Client sent unexpected message (goodbye)\n");
+                close(fd);
+                da_reset(recv_buf);
+                task_abort(ctx);
+                // TODO: broadcast goodbye
                 break;
             case MESSAGE_GET_STATE:
                 // TODO: broadcast to all except sender
