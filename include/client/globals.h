@@ -7,6 +7,8 @@ struct globals {
     int server_fd;
     bool is_connected;
     struct message *message_queue;
+    char *recv_buf;
+    char *send_buf;
 };
 
 extern struct globals globals;

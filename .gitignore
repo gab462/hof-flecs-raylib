@@ -1,2 +1,4 @@
 *.dSYM
 client
+client.exe
+server

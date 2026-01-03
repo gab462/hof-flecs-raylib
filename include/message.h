@@ -4,19 +4,22 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-struct message_hello { };
+struct message_hello {
+    char from_id[16];
+};
 
 struct message_welcome {
-    uint64_t to_id;
+    char to_id[16];
+    bool accepted;
 };
 
 struct message_get_state {
-    uint64_t from_id;
+    char from_id[16];
 };
 
 struct message_sync {
-    uint64_t from_id;
-    uint64_t to_id;
+    char from_id[16];
+    char to_id[16];
     Vector3 position;
     Vector2 direction;
     float speed;
@@ -28,26 +31,26 @@ struct message_sync {
 };
 
 struct message_left {
-    uint64_t from_id;
+    char from_id[16];
 };
 
 struct message_turning_right {
-    uint64_t from_id;
+    char from_id[16];
     bool state;
 };
 
 struct message_turning_left {
-    uint64_t from_id;
+    char from_id[16];
     bool state;
 };
 
 struct message_walking_forward {
-    uint64_t from_id;
+    char from_id[16];
     bool state;
 };
 
 struct message_walking_backward {
-    uint64_t from_id;
+    char from_id[16];
     bool state;
 };
 
