@@ -6,4 +6,5 @@ clang
 -Iinclude/client
 -Ilib/flecs/distr
 -Ilib/raylib/src
+-Ilib/raygui/src
 -Ilib/cut

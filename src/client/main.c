@@ -1,14 +1,14 @@
 #define RAYGUI_IMPLEMENTATION
 
-#include <errno.h>
 #include <components.h>
 #include <config.h>
-#include <systems.h>
-#include <message.h>
-#include <globals.h>
+#include <errno.h>
 #include <flecs.h>
-#include <raylib.h>
+#include <globals.h>
+#include <message.h>
 #include <raygui.h>
+#include <raylib.h>
+#include <systems.h>
 #include <tcp.h>
 
 struct globals globals = {
@@ -26,18 +26,18 @@ void SendMessage(struct message msg)
 
 void MessageProcessor(void)
 {
-    if(globals.server_fd <= 0)
+    if (globals.server_fd <= 0)
         return;
 
     ssize_t received = sock_read(globals.server_fd, &globals.recv_buf);
 
     if (received == 0 || (received == -1 && errno != EAGAIN)) {
-            globals.is_connected = false;
-            globals.server_fd = -1;
-            close(globals.server_fd);
+        globals.is_connected = false;
+        globals.server_fd = -1;
+        close(globals.server_fd);
     }
 
-    while (len(globals.recv_buf) >= (int) sizeof(struct message)) {
+    while (len(globals.recv_buf) >= (int)sizeof(struct message)) {
         struct message msg;
         memcpy(&msg, globals.recv_buf, sizeof(struct message));
         sb_consume(&globals.recv_buf, sizeof(struct message));
@@ -49,22 +49,23 @@ void MessageProcessor(void)
         struct message msg = dequeue(&globals.message_queue);
 
         switch (msg.type) {
-            case MESSAGE_WELCOME:
-                assert(!globals.is_connected);
+        case MESSAGE_WELCOME:
+            assert(!globals.is_connected);
 
-                struct message_welcome data = msg.data.welcome;
-                assert(memcmp(data.to_id, globals.name, sizeof(globals.name)) == 0);
+            struct message_welcome data = msg.data.welcome;
+            assert(memcmp(data.to_id, globals.name, sizeof(globals.name)) == 0);
 
-                if (data.accepted) {
-                    globals.is_connected = true;
-                } else {
-                    shutdown(globals.server_fd, SHUT_WR);
-                    close(globals.server_fd);
-                    globals.server_fd = -1;
-                }
+            if (data.accepted) {
+                globals.is_connected = true;
+            } else {
+                shutdown(globals.server_fd, SHUT_WR);
+                close(globals.server_fd);
+                globals.server_fd = -1;
+            }
 
-                break;
-            default: assert(false && "TODO");
+            break;
+        default:
+            assert(false && "TODO");
         }
     }
 
@@ -114,7 +115,7 @@ void LoginScreen(void)
             TraceLog(LOG_INFO, "Sending Hello message");
             struct message out = {
                 .type = MESSAGE_HELLO,
-                .data.hello.from_id = {0}
+                .data.hello.from_id = { 0 }
             };
 
             memcpy(out.data.hello.from_id, globals.name, sizeof(globals.name));
@@ -131,7 +132,7 @@ void LoginScreen(void)
 
     widget_pos.y += widget_pos.height + widget_padding;
 
-    if(globals.server_fd > 0){
+    if (globals.server_fd > 0) {
         MessageProcessor();
     }
 }
@@ -185,11 +186,7 @@ int main(void)
         ecs_value(WalkingSpeed, { 10.f }),
         ecs_value(RotationSpeed, { 1.f }),
         ecs_value(Controls, { 0 }),
-        ecs_value(AnimationState, {
-            .animations = player_model_anims,
-            .count = player_model_anim_count,
-            .current = PLAYER_IDLE_ANIMATION
-        }),
+        ecs_value(AnimationState, { .animations = player_model_anims, .count = player_model_anim_count, .current = PLAYER_IDLE_ANIMATION }),
         (ecs_value_t) { ecs_id(Model), &player_model });
 
     ecs_set(ctx, player, Player, { .camera = { .up = { 0.f, 1.f, 0.f }, .fovy = 45.f, .projection = CAMERA_PERSPECTIVE }, .distance = 15.f });
