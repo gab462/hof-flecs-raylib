@@ -1,4 +1,4 @@
-COMMON_CFLAGS := -Wall -Wextra -Wno-unused-parameter -std=gnu11 -I include -I lib/cut/
+COMMON_CFLAGS := -Wall -Wextra -Wno-unused-parameter -Wno-override-init -std=gnu11 -I include -I lib/cut/
 COMMON_HDR := $(wildcard include/*.h)
 
 CLIENT_CFLAGS := $(COMMON_CFLAGS) -I include/client/ -I lib/flecs/distr/ -I lib/raylib/src/ -I lib/raygui/src/ -lm

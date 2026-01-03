@@ -1,6 +1,7 @@
 clang
 -Wall
 -Wshadow
+-Wno-initializer-overrides
 -std=gnu11
 -Iinclude
 -Iinclude/client

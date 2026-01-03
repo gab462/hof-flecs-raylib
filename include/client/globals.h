@@ -1,9 +1,10 @@
 #pragma once
 
+#include <message.h>
 #include <stdbool.h>
 
 struct globals {
-    char name[16];
+    char name[ID_BUF_LEN];
     char host[256];
     char port[8];
     int server_fd;

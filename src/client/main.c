@@ -17,13 +17,6 @@ struct globals globals = {
     .port = "8172",
 };
 
-void SendMessage(struct message msg)
-{
-    char buf[sizeof(msg)];
-    memcpy(buf, &msg, sizeof(msg));
-    push_items(&globals.send_buf, buf, sizeof(msg));
-}
-
 void MessageProcessor(void)
 {
     if (globals.server_fd <= 0)
@@ -49,8 +42,12 @@ void MessageProcessor(void)
         struct message msg = dequeue(&globals.message_queue);
 
         switch (msg.type) {
+        case MESSAGE_HELLO:
+            // TODO: instantiate entity
+            break;
         case MESSAGE_WELCOME:
-            assert(!globals.is_connected);
+            if (globals.is_connected)
+                TraceLog(LOG_WARNING, "Received unexpected message (welcome)");
 
             struct message_welcome data = msg.data.welcome;
             assert(memcmp(data.to_id, globals.name, sizeof(globals.name)) == 0);
@@ -62,10 +59,25 @@ void MessageProcessor(void)
                 close(globals.server_fd);
                 globals.server_fd = -1;
             }
-
             break;
-        default:
-            assert(false && "TODO");
+        case MESSAGE_GET_STATE:
+            // TODO: respond with MESSAGE_SYNC
+            break;
+        case MESSAGE_SYNC:
+            // TODO: update corresponding entity
+            break;
+        case MESSAGE_TURNING_RIGHT:
+            // TODO: update corresponding entity
+            break;
+        case MESSAGE_TURNING_LEFT:
+            // TODO: update corresponding entity
+            break;
+        case MESSAGE_WALKING_FORWARD:
+            // TODO: update corresponding entity
+            break;
+        case MESSAGE_WALKING_BACKWARD:
+            // TODO: update corresponding entity
+            break;
         }
     }
 
@@ -113,14 +125,12 @@ void LoginScreen(void)
 
         if (globals.server_fd > 0) {
             TraceLog(LOG_INFO, "Sending Hello message");
-            struct message out = {
-                .type = MESSAGE_HELLO,
-                .data.hello.from_id = { 0 }
-            };
 
-            memcpy(out.data.hello.from_id, globals.name, sizeof(globals.name));
-
-            SendMessage(out);
+            send_message(&globals.send_buf,
+                ((struct message) {
+                    .type = MESSAGE_HELLO,
+                }),
+                .from_id = globals.name);
         }
     }
     widget_pos.y += widget_pos.height + widget_padding;
@@ -173,8 +183,9 @@ int main(void)
     ECS_SYSTEM(ctx, MoveCamera, EcsOnUpdate,
         [in] Position, [in] Direction, Player);
 
-    // TODO: connection task
-    // TODO: message processor system - creation, removal, control state, animations
+    // TODO: Keyboard input create messages instead of updating in place
+    // TODO: HUD task with connection status
+    // TODO: Render player name above model
 
     Model player_model = LoadModel(MODEL_PATH);
     int player_model_anim_count;

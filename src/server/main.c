@@ -10,19 +10,13 @@
 #include <task.h>
 #include <tcp_task.h>
 
-void send_message(char** send_buf, struct message msg)
-{
-    char buf[sizeof(msg)];
-    int count = sizeof(msg);
-
-    memcpy(buf, &msg, count);
-    push_items(send_buf, buf, count);
-}
+// TODO: global dictionary of username -> fd
 
 void message_handler(struct task_context* ctx, int fd, struct sockaddr_in addr)
 {
     char** recv_buf = task_ctx_alloc(ctx, char*);
     char** send_buf = task_ctx_alloc(ctx, char*);
+    // char *username = task_ctx_alloc(ctx, char, .count = ID_BUF_LEN);
 
     task_begin(ctx);
 
@@ -34,6 +28,7 @@ void message_handler(struct task_context* ctx, int fd, struct sockaddr_in addr)
         ssize_t received = sock_read(fd, recv_buf);
 
         if (received == 0 || (received == -1 && errno != EAGAIN)) { // Connection closed or error
+            // TODO: broadcast that player left
             perror("Lost connection");
             close(fd);
             da_reset(recv_buf);
@@ -49,16 +44,41 @@ void message_handler(struct task_context* ctx, int fd, struct sockaddr_in addr)
             case MESSAGE_HELLO: {
                 struct message_hello data = msg.data.hello;
 
-                struct message out = {
-                    .type = MESSAGE_WELCOME,
-                    .data.welcome.accepted = true // TODO: validate username & IP address
-                };
-                memcpy(out.data.welcome.to_id, data.from_id, sizeof(data.from_id));
+                send_message(send_buf,
+                    ((struct message) {
+                        .type = MESSAGE_WELCOME,
+                        .data.welcome.accepted = true,
+                    }),
+                    .to_id = data.from_id);
 
-                send_message(send_buf, out);
+                printf("Player '%s' joined\n", data.from_id);
+
+                // TODO: forward hello message to all peers
             } break;
-            default:
-                assert(false && "TODO");
+            case MESSAGE_WELCOME:
+                printf("Client sent unexpected message (welcome)\n");
+                close(fd);
+                da_reset(recv_buf);
+                task_abort(ctx);
+                break;
+            case MESSAGE_GET_STATE:
+                // TODO: broadcast to all except sender
+                break;
+            case MESSAGE_SYNC:
+                // TODO: send response to to_id
+                break;
+            case MESSAGE_TURNING_RIGHT:
+                // TODO: broadcast to all except sender
+                break;
+            case MESSAGE_TURNING_LEFT:
+                // TODO: broadcast to all except sender
+                break;
+            case MESSAGE_WALKING_FORWARD:
+                // TODO: broadcast to all except sender
+                break;
+            case MESSAGE_WALKING_BACKWARD:
+                // TODO: broadcast to all except sender
+                break;
             }
         }
 

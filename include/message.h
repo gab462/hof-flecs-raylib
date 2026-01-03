@@ -1,25 +1,30 @@
 #pragma once
 
+#include "cut.h"
 #include <raylib.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+
+#define ID_BUF_LEN 16
 
 struct message_hello {
-    char from_id[16];
+    char from_id[ID_BUF_LEN];
 };
 
 struct message_welcome {
-    char to_id[16];
+    char to_id[ID_BUF_LEN];
     bool accepted;
 };
 
 struct message_get_state {
-    char from_id[16];
+    char from_id[ID_BUF_LEN];
 };
 
 struct message_sync {
-    char from_id[16];
-    char to_id[16];
+    char from_id[ID_BUF_LEN];
+    char to_id[ID_BUF_LEN];
     Vector3 position;
     Vector2 direction;
     float speed;
@@ -31,26 +36,26 @@ struct message_sync {
 };
 
 struct message_left {
-    char from_id[16];
+    char from_id[ID_BUF_LEN];
 };
 
 struct message_turning_right {
-    char from_id[16];
+    char from_id[ID_BUF_LEN];
     bool state;
 };
 
 struct message_turning_left {
-    char from_id[16];
+    char from_id[ID_BUF_LEN];
     bool state;
 };
 
 struct message_walking_forward {
-    char from_id[16];
+    char from_id[ID_BUF_LEN];
     bool state;
 };
 
 struct message_walking_backward {
-    char from_id[16];
+    char from_id[ID_BUF_LEN];
     bool state;
 };
 
@@ -80,3 +85,50 @@ struct message {
     enum message_type type;
     union message_data data;
 };
+
+struct message_opt {
+    char* from_id;
+    char* to_id;
+};
+
+#define send_message(buf, msg, ...) send_message_impl(buf, msg, (struct message_opt) { 0 __VA_OPT__(, ) __VA_ARGS__ })
+
+static inline void
+send_message_impl(char** send_buf, struct message msg, struct message_opt opt)
+{
+    char buf[sizeof(msg)] = { 0 };
+    int count = sizeof(msg);
+
+    if (opt.from_id != NULL || opt.to_id != NULL) {
+        switch (msg.type) {
+        case MESSAGE_HELLO:
+            snprintf(msg.data.hello.from_id, ID_BUF_LEN, "%s", opt.from_id);
+            break;
+        case MESSAGE_WELCOME:
+            snprintf(msg.data.welcome.to_id, ID_BUF_LEN, "%s", opt.to_id);
+            break;
+        case MESSAGE_GET_STATE:
+            snprintf(msg.data.get_state.from_id, ID_BUF_LEN, "%s", opt.from_id);
+            break;
+        case MESSAGE_SYNC:
+            snprintf(msg.data.sync.from_id, ID_BUF_LEN, "%s", opt.from_id);
+            snprintf(msg.data.sync.to_id, ID_BUF_LEN, "%s", opt.to_id);
+            break;
+        case MESSAGE_TURNING_RIGHT:
+            snprintf(msg.data.turning_right.from_id, ID_BUF_LEN, "%s", opt.from_id);
+            break;
+        case MESSAGE_TURNING_LEFT:
+            snprintf(msg.data.turning_left.from_id, ID_BUF_LEN, "%s", opt.from_id);
+            break;
+        case MESSAGE_WALKING_FORWARD:
+            snprintf(msg.data.walking_forward.from_id, ID_BUF_LEN, "%s", opt.from_id);
+            break;
+        case MESSAGE_WALKING_BACKWARD:
+            snprintf(msg.data.walking_backward.from_id, ID_BUF_LEN, "%s", opt.from_id);
+            break;
+        }
+    }
+
+    memcpy(buf, &msg, count);
+    push_items(send_buf, buf, count);
+}
