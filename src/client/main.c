@@ -29,6 +29,7 @@ int main(void)
     ECS_COMPONENT_DEFINE(ctx, AnimationState);
     ECS_COMPONENT_DEFINE(ctx, Model);
     ECS_COMPONENT_DEFINE(ctx, Player);
+    ECS_COMPONENT_DEFINE(ctx, Nametag);
 
     // TODO: billboard component
 
@@ -38,18 +39,18 @@ int main(void)
         Position, Direction, [in] WalkingSpeed, [in] RotationSpeed, [in] Controls);
     ECS_SYSTEM(ctx, Animate, EcsOnUpdate,
         Model, AnimationState);
-    ECS_SYSTEM(ctx, RenderModel, EcsOnUpdate,
-        [in] Position, [in] Direction, [in] Model);
     ECS_SYSTEM(ctx, MoveCamera, EcsOnUpdate,
         [in] Position, [in] Direction, Player);
+    ECS_SYSTEM(ctx, RenderModel, EcsOnUpdate,
+        [in] Position, [in] Direction, [in] Model);
+    ECS_SYSTEM(ctx, RenderName, 0, // Ran manually outside of BeginMode3D
+        [in] Position, [in] Nametag);
 
     while (!globals.is_connected && !WindowShouldClose()) {
         BeginDrawing();
         LoginScreen(ctx);
         EndDrawing();
     }
-
-    // TODO: Render player name above model
 
     ecs_entity_t player = CreatePeer(ctx, globals.name, MODEL_PATH);
 
@@ -62,8 +63,8 @@ int main(void)
           },
             .distance = 15.f });
 
-    const Player* camera_state = ecs_get(ctx, player, Player);
-    const Camera* camera = &camera_state->camera;
+    const Player* player_state = ecs_get(ctx, player, Player);
+    globals.camera = &player_state->camera;
 
     while (!WindowShouldClose()) {
         BeginDrawing();
@@ -75,7 +76,7 @@ int main(void)
         }
 
         ClearBackground(RAYWHITE);
-        BeginMode3D(*camera);
+        BeginMode3D(*globals.camera);
         DrawGrid(512, 1.f);
 
         float dt = GetFrameTime();
@@ -84,6 +85,9 @@ int main(void)
         MessageProcessor(ctx);
 
         EndMode3D();
+
+        ecs_run(ctx, ecs_id(RenderName), dt, NULL);
+
         EndDrawing();
     }
 

@@ -46,3 +46,8 @@ typedef struct {
     float distance;
 } Player;
 extern ECS_COMPONENT_DECLARE(Player);
+
+typedef struct {
+    const char* name;
+} Nametag;
+extern ECS_COMPONENT_DECLARE(Nametag);

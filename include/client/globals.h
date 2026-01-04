@@ -1,6 +1,7 @@
 #pragma once
 
 #include <message.h>
+#include <raylib.h>
 #include <stdbool.h>
 
 struct globals {
@@ -12,6 +13,7 @@ struct globals {
     struct message* message_queue;
     char* recv_buf;
     char* send_buf;
+    const Camera* camera;
 };
 
 extern struct globals globals;

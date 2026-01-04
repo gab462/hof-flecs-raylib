@@ -24,6 +24,7 @@ ecs_entity_t CreatePeer(ecs_world_t* ctx, char name[ID_BUF_LEN], char* model_pat
             .current = PLAYER_IDLE_ANIMATION,
         });
     ecs_set_id(ctx, player, ecs_id(Model), sizeof(Model), &player_model);
+    ecs_set(ctx, player, Nametag, { ecs_get_name(ctx, player) });
 
     return player;
 }

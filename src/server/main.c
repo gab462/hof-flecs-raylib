@@ -139,7 +139,6 @@ void message_handler(struct task_context* ctx, int fd, struct sockaddr_in addr)
                 printf("Client sent unexpected message (welcome)\n");
                 disconnect_peer(self);
                 task_abort(ctx);
-                // TODO: broadcast goodbye
                 break;
             case MESSAGE_GOODBYE:
                 printf("Client sent unexpected message (goodbye)\n");
