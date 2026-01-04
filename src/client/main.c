@@ -21,12 +21,6 @@ int main(void)
 
     ecs_world_t* ctx = ecs_init();
 
-    while (!globals.is_connected && !WindowShouldClose()) {
-        BeginDrawing();
-        LoginScreen(ctx);
-        EndDrawing();
-    }
-
     ECS_COMPONENT_DEFINE(ctx, Position);
     ECS_COMPONENT_DEFINE(ctx, Direction);
     ECS_COMPONENT_DEFINE(ctx, WalkingSpeed);
@@ -48,6 +42,12 @@ int main(void)
         [in] Position, [in] Direction, [in] Model);
     ECS_SYSTEM(ctx, MoveCamera, EcsOnUpdate,
         [in] Position, [in] Direction, Player);
+
+    while (!globals.is_connected && !WindowShouldClose()) {
+        BeginDrawing();
+        LoginScreen(ctx);
+        EndDrawing();
+    }
 
     // TODO: Render player name above model
 
