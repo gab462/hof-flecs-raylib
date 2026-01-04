@@ -87,6 +87,24 @@ int main(void)
         EndDrawing();
     }
 
+    ecs_query_t* q = ecs_query(ctx,
+        { .terms = {
+              { ecs_id(Model) },
+              { ecs_id(AnimationState) },
+          } });
+
+    ecs_iter_t it = ecs_query_iter(ctx, q);
+
+    while (ecs_query_next(&it)) {
+        Model* m = ecs_field(&it, Model, 0);
+        AnimationState* s = ecs_field(&it, AnimationState, 1);
+
+        for (int i = 0; i < it.count; i++) {
+            UnloadModelAnimations(s[i].animations, s[i].count);
+            UnloadModel(m[i]);
+        }
+    }
+
     ecs_fini(ctx);
 
     return 0;
