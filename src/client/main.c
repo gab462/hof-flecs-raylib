@@ -220,6 +220,13 @@ int main(void)
 
     while (!WindowShouldClose()) {
         BeginDrawing();
+
+        if (!globals.is_connected) {
+            LoginScreen();
+            EndDrawing();
+            continue;
+        }
+
         ClearBackground(RAYWHITE);
         BeginMode3D(*camera);
         DrawGrid(512, 1.f);
@@ -227,7 +234,7 @@ int main(void)
         float dt = GetFrameTime();
         ecs_progress(ctx, dt);
 
-        // TODO: process messages
+        MessageProcessor();
 
         EndMode3D();
         EndDrawing();
