@@ -1,0 +1,11 @@
+#include <components.h>
+#include <flecs.h>
+
+ECS_COMPONENT_DECLARE(Position);
+ECS_COMPONENT_DECLARE(Direction);
+ECS_COMPONENT_DECLARE(WalkingSpeed);
+ECS_COMPONENT_DECLARE(RotationSpeed);
+ECS_COMPONENT_DECLARE(Controls);
+ECS_COMPONENT_DECLARE(AnimationState);
+ECS_COMPONENT_DECLARE(Model);
+ECS_COMPONENT_DECLARE(Player);

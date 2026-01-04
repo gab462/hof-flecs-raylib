@@ -164,14 +164,14 @@ int main(void)
 
     ecs_world_t* ctx = ecs_init();
 
-    ECS_COMPONENT(ctx, Position);
-    ECS_COMPONENT(ctx, Direction);
-    ECS_COMPONENT(ctx, WalkingSpeed);
-    ECS_COMPONENT(ctx, RotationSpeed);
-    ECS_COMPONENT(ctx, Controls);
-    ECS_COMPONENT(ctx, AnimationState);
-    ECS_COMPONENT(ctx, Model);
-    ECS_COMPONENT(ctx, Player);
+    ECS_COMPONENT_DEFINE(ctx, Position);
+    ECS_COMPONENT_DEFINE(ctx, Direction);
+    ECS_COMPONENT_DEFINE(ctx, WalkingSpeed);
+    ECS_COMPONENT_DEFINE(ctx, RotationSpeed);
+    ECS_COMPONENT_DEFINE(ctx, Controls);
+    ECS_COMPONENT_DEFINE(ctx, AnimationState);
+    ECS_COMPONENT_DEFINE(ctx, Model);
+    ECS_COMPONENT_DEFINE(ctx, Player);
 
     // TODO: billboard component
 
