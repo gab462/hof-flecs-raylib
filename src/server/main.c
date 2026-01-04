@@ -10,13 +10,50 @@
 #include <task.h>
 #include <tcp_task.h>
 
-// TODO: global dictionary of username -> fd
+struct peer {
+    char name[ID_BUF_LEN];
+    int fd;
+    char* recv_buf;
+    char* send_buf;
+};
+
+struct peer** peers = NULL;
+
+void disconnect_peer(struct peer* peer)
+{
+    close(peer->fd);
+    da_reset(&peer->recv_buf);
+    da_reset(&peer->send_buf);
+
+    for (int i = 0; i < len(peers); i++) {
+        if (peers[i] == peer)
+            swap_delete(&peers, i);
+    }
+
+    foreach (player, peers) {
+        send_message(&(*player)->send_buf,
+            ((struct message) {
+                .type = MESSAGE_GOODBYE,
+            }),
+            .from_id = peer->name);
+    }
+}
+
+struct peer* get_peer(char name[ID_BUF_LEN])
+{
+    foreach (peer, peers) {
+        if (strncmp(name, (*peer)->name, ID_BUF_LEN) == 0)
+            return *peer;
+    }
+
+    printf("No peer found with name %s - server state is most likely corrupt\n", name);
+
+    return NULL;
+}
 
 void message_handler(struct task_context* ctx, int fd, struct sockaddr_in addr)
 {
-    char** recv_buf = task_ctx_alloc(ctx, char*);
-    char** send_buf = task_ctx_alloc(ctx, char*);
-    // char *username = task_ctx_alloc(ctx, char, .count = ID_BUF_LEN);
+    struct peer* self = task_ctx_alloc(ctx, struct peer);
 
     task_begin(ctx);
 
@@ -24,27 +61,29 @@ void message_handler(struct task_context* ctx, int fd, struct sockaddr_in addr)
 
     printf("Received connection from %s\n", ip);
 
+    self->fd = fd;
+
+    push(&peers, self);
+
     for (;;) {
-        ssize_t received = sock_read(fd, recv_buf);
+        ssize_t received = sock_read(fd, &self->recv_buf);
 
         if (received == 0 || (received == -1 && errno != EAGAIN)) { // Connection closed or error
-            // TODO: broadcast goodbye
-            perror("Lost connection");
-            close(fd);
-            da_reset(recv_buf);
+            printf("Lost connection to peer\n");
+            disconnect_peer(self);
             task_abort(ctx);
         }
 
-        while (len(*recv_buf) >= (int)sizeof(struct message)) {
+        while (len(self->recv_buf) >= (int)sizeof(struct message)) {
             struct message msg;
-            memcpy(&msg, *recv_buf, sizeof(struct message));
-            sb_consume(recv_buf, sizeof(struct message));
+            memcpy(&msg, self->recv_buf, sizeof(struct message));
+            sb_consume(&self->recv_buf, sizeof(struct message));
 
             switch (msg.type) {
             case MESSAGE_HELLO: {
                 struct message_hello data = msg.data.hello;
 
-                send_message(send_buf,
+                send_message(&self->send_buf,
                     ((struct message) {
                         .type = MESSAGE_WELCOME,
                         .data.welcome.accepted = true,
@@ -53,21 +92,20 @@ void message_handler(struct task_context* ctx, int fd, struct sockaddr_in addr)
 
                 printf("Player '%s' joined\n", data.from_id);
 
+                snprintf(self->name, ID_BUF_LEN, "%s", data.from_id);
+
                 // TODO: forward hello message to all peers
             } break;
             case MESSAGE_WELCOME:
                 printf("Client sent unexpected message (welcome)\n");
-                close(fd);
-                da_reset(recv_buf);
+                disconnect_peer(self);
                 task_abort(ctx);
                 // TODO: broadcast goodbye
                 break;
             case MESSAGE_GOODBYE:
                 printf("Client sent unexpected message (goodbye)\n");
-                close(fd);
-                da_reset(recv_buf);
+                disconnect_peer(self);
                 task_abort(ctx);
-                // TODO: broadcast goodbye
                 break;
             case MESSAGE_GET_STATE:
                 // TODO: broadcast to all except sender
@@ -90,8 +128,8 @@ void message_handler(struct task_context* ctx, int fd, struct sockaddr_in addr)
             }
         }
 
-        if (len(*send_buf) > 0)
-            sock_write(fd, send_buf);
+        if (len(self->send_buf) > 0)
+            sock_write(fd, &self->send_buf);
 
         task_yield(ctx);
     }

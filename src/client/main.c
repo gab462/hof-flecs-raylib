@@ -84,7 +84,7 @@ void MessageProcessor(void)
         }
     }
 
-    while (len(globals.send_buf) > 0) {
+    if (len(globals.send_buf) > 0) {
         sock_write(globals.server_fd, &globals.send_buf);
     }
 }
