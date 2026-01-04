@@ -17,6 +17,47 @@ struct globals globals = {
     .port = "8172",
 };
 
+ecs_entity_t CreatePlayer(ecs_world_t* ctx, char name[16], char* model_path)
+{
+    ecs_entity_t player = ecs_entity(ctx, { .name = name });
+
+    Model player_model = LoadModel(model_path);
+    int player_model_anim_count;
+    ModelAnimation* player_model_anims = LoadModelAnimations(model_path, &player_model_anim_count);
+
+    ecs_set(ctx, player, Position, { 0 });
+    ecs_set(ctx, player, Position, { 0 });
+    ecs_set(ctx, player, Direction, { 1.f, 0.f });
+    ecs_set(ctx, player, WalkingSpeed, { 10.f });
+    ecs_set(ctx, player, RotationSpeed, { 1.f });
+    ecs_set(ctx, player, Controls, { 0 });
+    ecs_set(ctx, player, AnimationState,
+        {
+            .animations = player_model_anims,
+            .count = player_model_anim_count,
+            .current = PLAYER_IDLE_ANIMATION,
+        });
+    ecs_set_id(ctx, player, ecs_id(Model), sizeof(Model), &player_model);
+
+    return player;
+}
+
+void DestroyPlayer(ecs_world_t* ctx, char name[16])
+{
+    ecs_entity_t player = ecs_lookup(ctx, name);
+
+    if (player == 0) {
+        TraceLog(LOG_WARNING, "No entity %s found to destroy - state is most likely corrupt", name);
+        return;
+    }
+
+    AnimationState* anim = ecs_get_mut(ctx, player, AnimationState);
+    UnloadModelAnimations(anim->animations, anim->count);
+
+    Model* model = ecs_get_mut(ctx, player, Model);
+    UnloadModel(*model);
+}
+
 void MessageProcessor(void)
 {
     if (globals.server_fd <= 0)
@@ -186,25 +227,9 @@ int main(void)
     ECS_SYSTEM(ctx, MoveCamera, EcsOnUpdate,
         [in] Position, [in] Direction, Player);
 
-    // TODO: HUD task with connection status
     // TODO: Render player name above model
 
-    Model player_model = LoadModel(MODEL_PATH);
-    int player_model_anim_count;
-    ModelAnimation* player_model_anims = LoadModelAnimations(MODEL_PATH, &player_model_anim_count);
-
-    ecs_entity_t player = ecs_insert(ctx,
-        ecs_value(Position, { 0 }),
-        ecs_value(Direction, { 1.f, 0.f }),
-        ecs_value(WalkingSpeed, { 10.f }),
-        ecs_value(RotationSpeed, { 1.f }),
-        ecs_value(Controls, { 0 }),
-        ecs_value(AnimationState, {
-                                      .animations = player_model_anims,
-                                      .count = player_model_anim_count,
-                                      .current = PLAYER_IDLE_ANIMATION,
-                                  }),
-        (ecs_value_t) { ecs_id(Model), &player_model });
+    ecs_entity_t player = CreatePlayer(ctx, globals.name, MODEL_PATH);
 
     ecs_set(ctx,
         player, Player,
