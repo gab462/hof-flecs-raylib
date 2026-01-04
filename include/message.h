@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cut.h"
+#include <cut.h>
 #include <raylib.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -31,12 +31,9 @@ struct message_sync {
     char to_id[ID_BUF_LEN];
     Vector3 position;
     Vector2 direction;
-    float speed;
+    float walking_speed;
     float rotation_speed;
-    bool is_turning_right;
-    bool is_turning_left;
-    bool is_walking_forward;
-    bool is_walking_backward;
+    int control_state;
 };
 
 struct message_left {

@@ -1,3 +1,5 @@
+#include "message.h"
+#include "peer.h"
 #include <components.h>
 #include <config.h>
 #include <errno.h>
@@ -32,15 +34,17 @@ void MessageProcessor(ecs_world_t* ctx)
         struct message msg = dequeue(&globals.message_queue);
 
         switch (msg.type) {
-        case MESSAGE_HELLO:
-            // TODO: instantiate entity
-            break;
+        case MESSAGE_HELLO: {
+            struct message_hello data = msg.data.hello;
+
+            CreatePeer(ctx, data.from_id, MODEL_PATH);
+        } break;
         case MESSAGE_WELCOME: {
             if (globals.is_connected)
                 TraceLog(LOG_WARNING, "Received unexpected message (welcome)");
 
             struct message_welcome data = msg.data.welcome;
-            assert(memcmp(data.to_id, globals.name, sizeof(globals.name)) == 0);
+            assert(strncmp(data.to_id, globals.name, ID_BUF_LEN) == 0);
 
             if (data.accepted) {
                 globals.is_connected = true;
@@ -50,15 +54,39 @@ void MessageProcessor(ecs_world_t* ctx)
                 globals.server_fd = -1;
             }
         } break;
-        case MESSAGE_GOODBYE:
-            // TODO: remove entity
-            break;
-        case MESSAGE_GET_STATE:
-            // TODO: respond with MESSAGE_SYNC
-            break;
-        case MESSAGE_SYNC:
-            // TODO: update corresponding entity
-            break;
+        case MESSAGE_GOODBYE: {
+            struct message_goodbye data = msg.data.goodbye;
+
+            DestroyPeer(ctx, data.from_id);
+        } break;
+        case MESSAGE_GET_STATE: {
+            struct message_get_state data = msg.data.get_state;
+
+            ecs_entity_t player = ecs_lookup(ctx, globals.name);
+
+            send_message(&globals.send_buf,
+                ((struct message) {
+                    .type = MESSAGE_SYNC,
+                    .data.sync = {
+                        .position = *ecs_get(ctx, player, Position),
+                        .direction = *ecs_get(ctx, player, Direction),
+                        .walking_speed = ecs_get(ctx, player, WalkingSpeed)->value,
+                        .rotation_speed = ecs_get(ctx, player, RotationSpeed)->value,
+                        .control_state = ecs_get(ctx, player, Controls)->state,
+                    } }),
+                .from_id = globals.name, .to_id = data.from_id);
+        } break;
+        case MESSAGE_SYNC: {
+            struct message_sync data = msg.data.sync;
+
+            ecs_entity_t e = ecs_lookup(ctx, data.from_id);
+
+            *ecs_get_mut(ctx, e, Position) = data.position;
+            *ecs_get_mut(ctx, e, Direction) = data.direction;
+            ecs_get_mut(ctx, e, WalkingSpeed)->value = data.walking_speed;
+            ecs_get_mut(ctx, e, RotationSpeed)->value = data.rotation_speed;
+            ecs_get_mut(ctx, e, Controls)->state = data.control_state;
+        } break;
         case MESSAGE_TURNING_RIGHT: {
             struct message_turning_right data = msg.data.turning_right;
 
