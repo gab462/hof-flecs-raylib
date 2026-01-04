@@ -30,16 +30,18 @@ ecs_entity_t CreatePeer(ecs_world_t* ctx, char name[ID_BUF_LEN], char* model_pat
 
 void DestroyPeer(ecs_world_t* ctx, char name[ID_BUF_LEN])
 {
-    ecs_entity_t player = ecs_lookup(ctx, name);
+    ecs_entity_t peer = ecs_lookup(ctx, name);
 
-    if (player == 0) {
+    if (peer == 0) {
         TraceLog(LOG_WARNING, "Entity %s not found", name);
         return;
     }
 
-    AnimationState* anim = ecs_get_mut(ctx, player, AnimationState);
+    AnimationState* anim = ecs_get_mut(ctx, peer, AnimationState);
     UnloadModelAnimations(anim->animations, anim->count);
 
-    Model* model = ecs_get_mut(ctx, player, Model);
+    Model* model = ecs_get_mut(ctx, peer, Model);
     UnloadModel(*model);
+
+    ecs_delete(ctx, peer);
 }
