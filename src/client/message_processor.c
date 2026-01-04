@@ -1,13 +1,14 @@
-#include "message.h"
-#include "peer.h"
 #include <components.h>
 #include <config.h>
 #include <errno.h>
 #include <flecs.h>
 #include <globals.h>
+#include <message.h>
 #include <message_processor.h>
+#include <peer.h>
 #include <sock.h>
 #include <sys/socket.h>
+#include <systems.h>
 
 void MessageProcessor(ecs_world_t* ctx)
 {

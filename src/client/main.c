@@ -69,7 +69,7 @@ int main(void)
         BeginDrawing();
 
         if (!globals.is_connected) {
-            LoginScreen(ctx);
+            DrawText("Lost connection with the server", 10, 10, 42, RED);
             EndDrawing();
             continue;
         }
@@ -104,6 +104,8 @@ int main(void)
             UnloadModel(m[i]);
         }
     }
+
+    ecs_query_fini(q);
 
     ecs_fini(ctx);
 

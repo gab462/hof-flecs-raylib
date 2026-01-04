@@ -4,11 +4,10 @@
 #include <globals.h>
 #include <math.h>
 #include <message.h>
+#include <message_processor.h>
 #include <raylib.h>
 #include <raymath.h>
 #include <systems.h>
-
-#define enqueue_message(q, msg, ...) enqueue(q, make_message(msg, __VA_ARGS__))
 
 void RenderModel(ecs_iter_t* it)
 {
