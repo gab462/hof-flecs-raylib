@@ -146,9 +146,6 @@ void message_handler(struct task_context* ctx, int fd, struct sockaddr_in addr)
                 disconnect_peer(self);
                 task_abort(ctx);
                 break;
-            case MESSAGE_GET_STATE:
-                broadcast_message(msg, self);
-                break;
             case MESSAGE_SYNC: {
                 struct peer* peer = get_peer(msg.data.sync.to_id);
                 if (peer == NULL) {
@@ -158,16 +155,7 @@ void message_handler(struct task_context* ctx, int fd, struct sockaddr_in addr)
 
                 send_message(&peer->send_buf, msg);
             } break;
-            case MESSAGE_TURNING_RIGHT:
-                broadcast_message(msg, self);
-                break;
-            case MESSAGE_TURNING_LEFT:
-                broadcast_message(msg, self);
-                break;
-            case MESSAGE_WALKING_FORWARD:
-                broadcast_message(msg, self);
-                break;
-            case MESSAGE_WALKING_BACKWARD:
+            default:
                 broadcast_message(msg, self);
                 break;
             }
