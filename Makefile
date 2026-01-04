@@ -1,6 +1,17 @@
 COMMON_CFLAGS := -Wall -Wextra -Wno-unused-parameter -Wno-override-init -std=gnu11 -I include -I lib/cut/
 COMMON_HDR := $(wildcard include/*.h)
 
+DEBUG := 0
+RELEASE := 0
+
+ifeq ($(DEBUG), 1)
+	COMMON_CFLAGS += -ggdb -fsanitize=address,undefined
+endif
+
+ifeq ($(RELEASE), 1)
+	COMMON_CFLAGS += -O2
+endif
+
 CLIENT_CFLAGS := $(COMMON_CFLAGS) -I include/client/ -I lib/flecs/distr/ -I lib/raylib/src/ -I lib/raygui/src/ -lm
 CLIENT_HDR := $(COMMON_HDR) $(wildcard include/client/*.h)
 CLIENT_SRC := $(wildcard src/client/*.c) lib/flecs/distr/flecs.c lib/raylib/src/libraylib.a
