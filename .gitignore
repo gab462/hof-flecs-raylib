@@ -1,4 +1,4 @@
-*.dSYM
-client
-client.exe
-server
+/*.dSYM
+/client
+/client.exe
+/server
