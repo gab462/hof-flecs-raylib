@@ -52,6 +52,16 @@ struct peer* get_peer(char name[ID_BUF_LEN])
     return NULL;
 }
 
+void broadcast_message(struct message msg, struct peer* sender)
+{
+    foreach (peer, peers) {
+        if (*peer == sender)
+            continue;
+
+        send_message(&(*peer)->send_buf, msg);
+    }
+}
+
 void message_handler(struct task_context* ctx, int fd, struct sockaddr_in addr)
 {
     struct peer* self = task_ctx_alloc(ctx, struct peer);
@@ -59,6 +69,7 @@ void message_handler(struct task_context* ctx, int fd, struct sockaddr_in addr)
     task_begin(ctx);
 
     char* ip = inet_ntoa(addr.sin_addr);
+    // TODO: optional whitelist
 
     printf("Received connection from %s\n", ip);
 
@@ -90,6 +101,7 @@ void message_handler(struct task_context* ctx, int fd, struct sockaddr_in addr)
             case MESSAGE_HELLO: {
                 struct message_hello data = msg.data.hello;
 
+                // TODO: prevent name duplication
                 send_message(&self->send_buf,
                     ((struct message) {
                         .type = MESSAGE_WELCOME,
@@ -101,9 +113,27 @@ void message_handler(struct task_context* ctx, int fd, struct sockaddr_in addr)
 
                 snprintf(self->name, ID_BUF_LEN, "%s", data.from_id);
 
-                // TODO: forward hello message to all peers
-                // TODO: send hello from all peers to new player
-                // TODO: send get_state message to all peers
+                // Instantiate user in all peers
+                broadcast_message(msg, self);
+
+                foreach (peer, peers) {
+                    if (*peer == self)
+                        continue;
+
+                    // Instantiate peer in user session
+                    send_message(&self->send_buf,
+                        ((struct message) {
+                            .type = MESSAGE_HELLO,
+                        }),
+                        .from_id = (*peer)->name);
+
+                    // Sync state from peer in user session
+                    send_message(&(*peer)->send_buf,
+                        ((struct message) {
+                            .type = MESSAGE_GET_STATE,
+                        }),
+                        .from_id = self->name);
+                }
             } break;
             case MESSAGE_WELCOME:
                 printf("Client sent unexpected message (welcome)\n");
@@ -117,22 +147,28 @@ void message_handler(struct task_context* ctx, int fd, struct sockaddr_in addr)
                 task_abort(ctx);
                 break;
             case MESSAGE_GET_STATE:
-                // TODO: broadcast to all except sender
+                broadcast_message(msg, self);
                 break;
-            case MESSAGE_SYNC:
-                // TODO: send response to to_id
-                break;
+            case MESSAGE_SYNC: {
+                struct peer* peer = get_peer(msg.data.sync.to_id);
+                if (peer == NULL) {
+                    printf("Peer %s not found\n", msg.data.sync.to_id);
+                    break;
+                }
+
+                send_message(&peer->send_buf, msg);
+            } break;
             case MESSAGE_TURNING_RIGHT:
-                // TODO: broadcast to all except sender
+                broadcast_message(msg, self);
                 break;
             case MESSAGE_TURNING_LEFT:
-                // TODO: broadcast to all except sender
+                broadcast_message(msg, self);
                 break;
             case MESSAGE_WALKING_FORWARD:
-                // TODO: broadcast to all except sender
+                broadcast_message(msg, self);
                 break;
             case MESSAGE_WALKING_BACKWARD:
-                // TODO: broadcast to all except sender
+                broadcast_message(msg, self);
                 break;
             }
         }
