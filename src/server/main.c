@@ -1,4 +1,5 @@
 #include <arpa/inet.h>
+#include <assert.h>
 #include <cut.h>
 #include <errno.h>
 #include <message.h>
@@ -79,6 +80,12 @@ void message_handler(struct task_context* ctx, int fd, struct sockaddr_in addr)
             memcpy(&msg, self->recv_buf, sizeof(struct message));
             sb_consume(&self->recv_buf, sizeof(struct message));
 
+            if (msg.type < MESSAGE_HELLO || msg.type > MESSAGE_WALKING_BACKWARD) {
+                fprintf(stderr, "Received message with invalid type from %s\n", self->name);
+                disconnect_peer(self);
+                task_abort(ctx);
+            }
+
             switch (msg.type) {
             case MESSAGE_HELLO: {
                 struct message_hello data = msg.data.hello;
@@ -95,6 +102,8 @@ void message_handler(struct task_context* ctx, int fd, struct sockaddr_in addr)
                 snprintf(self->name, ID_BUF_LEN, "%s", data.from_id);
 
                 // TODO: forward hello message to all peers
+                // TODO: send hello from all peers to new player
+                // TODO: send get_state message to all peers
             } break;
             case MESSAGE_WELCOME:
                 printf("Client sent unexpected message (welcome)\n");
