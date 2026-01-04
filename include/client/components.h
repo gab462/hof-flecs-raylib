@@ -8,10 +8,10 @@ typedef struct {
 } FloatValue;
 
 enum control_state {
-    WALKING_FORWARD = 1,
-    WALKING_BACKWARD = 2,
-    TURNING_RIGHT = 4,
-    TURNING_LEFT = 8,
+    CONTROL_TURNING_RIGHT = 1,
+    CONTROL_TURNING_LEFT = 2,
+    CONTROL_WALKING_FORWARD = 4,
+    CONTROL_WALKING_BACKWARD = 8,
 };
 
 extern ECS_COMPONENT_DECLARE(Model);

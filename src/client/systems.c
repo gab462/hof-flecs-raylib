@@ -8,6 +8,8 @@
 #include <raymath.h>
 #include <systems.h>
 
+#define enqueue_message(q, msg, ...) enqueue(q, make_message(msg, __VA_ARGS__))
+
 void RenderModel(ecs_iter_t* it)
 {
     Position* p = ecs_field(it, Position, 0);
@@ -30,7 +32,7 @@ void Move(ecs_iter_t* it)
     Controls* c = ecs_field(it, Controls, 4);
 
     for (int i = 0; i < it->count; i++) {
-        if (c[i].state & WALKING_FORWARD) {
+        if (c[i].state & CONTROL_WALKING_FORWARD) {
             p[i] = Vector3Add(p[i],
                 (Vector3) {
                     ws[i].value * it->delta_time * d[i].x,
@@ -39,7 +41,7 @@ void Move(ecs_iter_t* it)
                 });
         }
 
-        if (c[i].state & WALKING_BACKWARD) {
+        if (c[i].state & CONTROL_WALKING_BACKWARD) {
             p[i] = Vector3Add(p[i],
                 (Vector3) {
                     -ws[i].value * it->delta_time * d[i].x,
@@ -48,11 +50,11 @@ void Move(ecs_iter_t* it)
                 });
         }
 
-        if (c[i].state & TURNING_RIGHT) {
+        if (c[i].state & CONTROL_TURNING_RIGHT) {
             d[i] = Vector2Rotate(d[i], rs[i].value * it->delta_time);
         }
 
-        if (c[i].state & TURNING_LEFT) {
+        if (c[i].state & CONTROL_TURNING_LEFT) {
             d[i] = Vector2Rotate(d[i], -rs[i].value * it->delta_time);
         }
     }
@@ -88,27 +90,41 @@ void MoveCamera(ecs_iter_t* it)
 
 void KeyboardControls(ecs_iter_t* it)
 {
-    Controls* c = ecs_field(it, Controls, 0);
+    // Controls* c = ecs_field(it, Controls, 0);
     // Player *p = ecs_field(it, Player, 1);
 
-    for (int i = 0; i < it->count; i++) {
-        // TODO: send message instead of changing state in place
-        // (sync with animation state)
-        // if (IsKeyPressed(KEY_W)) {
-        //     enqueue_message(&globals.message_queue,
-        //         ((struct message) {
-        //             .type = MESSAGE_WALKING_FORWARD,
-        //             .data.walking_forward.state = true,
-        //         }), .from_id = globals.name);
-        //
-        //     send_message(&globals.send_buf,
-        //         ((struct message) {
-        //             .type = MESSAGE_WALKING_FORWARD,
-        //             .data.walking_forward.state = true,
-        //         }), .from_id = globals.name);
-        // }
+    int keys[] = { KEY_W, KEY_A, KEY_S, KEY_D };
+    int types[] = { MESSAGE_WALKING_FORWARD, MESSAGE_TURNING_LEFT, MESSAGE_WALKING_BACKWARD, MESSAGE_TURNING_RIGHT };
 
-        c->state
-            = IsKeyDown(KEY_W) | (IsKeyDown(KEY_S) << 1) | (IsKeyDown(KEY_D) << 2) | (IsKeyDown(KEY_A) << 3);
+    for (int i = 0; i < it->count; i++) {
+        for (int j = 0; j < 4; j++) {
+            if (IsKeyPressed(keys[j]) || IsKeyReleased(keys[j])) {
+                struct message msg = {
+                    .type = types[j]
+                };
+
+                bool state = IsKeyPressed(keys[j]); // true if pressed, false if released
+
+                switch (msg.type) {
+                case MESSAGE_WALKING_FORWARD:
+                    msg.data.walking_forward.state = state;
+                    break;
+                case MESSAGE_TURNING_LEFT:
+                    msg.data.turning_left.state = state;
+                    break;
+                case MESSAGE_TURNING_RIGHT:
+                    msg.data.turning_right.state = state;
+                    break;
+                case MESSAGE_WALKING_BACKWARD:
+                    msg.data.walking_backward.state = state;
+                    break;
+                default:
+                    assert(false && "Unreachable");
+                }
+
+                enqueue_message(&globals.message_queue, msg, .from_id = globals.name);
+                send_message(&globals.send_buf, msg, .from_id = globals.name);
+            }
+        }
     }
 }

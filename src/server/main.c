@@ -47,7 +47,7 @@ struct peer* get_peer(char name[ID_BUF_LEN])
             return *peer;
     }
 
-    printf("No peer found with name %s - server state is most likely corrupt\n", name);
+    printf("Peer %s not found\n", name);
 
     return NULL;
 }

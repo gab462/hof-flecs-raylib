@@ -2,194 +2,16 @@
 
 #include <components.h>
 #include <config.h>
-#include <errno.h>
 #include <flecs.h>
 #include <globals.h>
+#include <login_screen.h>
 #include <message.h>
+#include <message_processor.h>
+#include <peer.h>
 #include <raygui.h>
 #include <raylib.h>
 #include <systems.h>
 #include <tcp.h>
-
-struct globals globals = {
-    .name = "username",
-    .host = "127.0.0.1",
-    .port = "8172",
-};
-
-ecs_entity_t CreatePlayer(ecs_world_t* ctx, char name[16], char* model_path)
-{
-    ecs_entity_t player = ecs_entity(ctx, { .name = name });
-
-    Model player_model = LoadModel(model_path);
-    int player_model_anim_count;
-    ModelAnimation* player_model_anims = LoadModelAnimations(model_path, &player_model_anim_count);
-
-    ecs_set(ctx, player, Position, { 0 });
-    ecs_set(ctx, player, Position, { 0 });
-    ecs_set(ctx, player, Direction, { 1.f, 0.f });
-    ecs_set(ctx, player, WalkingSpeed, { 10.f });
-    ecs_set(ctx, player, RotationSpeed, { 1.f });
-    ecs_set(ctx, player, Controls, { 0 });
-    ecs_set(ctx, player, AnimationState,
-        {
-            .animations = player_model_anims,
-            .count = player_model_anim_count,
-            .current = PLAYER_IDLE_ANIMATION,
-        });
-    ecs_set_id(ctx, player, ecs_id(Model), sizeof(Model), &player_model);
-
-    return player;
-}
-
-void DestroyPlayer(ecs_world_t* ctx, char name[16])
-{
-    ecs_entity_t player = ecs_lookup(ctx, name);
-
-    if (player == 0) {
-        TraceLog(LOG_WARNING, "No entity %s found to destroy - state is most likely corrupt", name);
-        return;
-    }
-
-    AnimationState* anim = ecs_get_mut(ctx, player, AnimationState);
-    UnloadModelAnimations(anim->animations, anim->count);
-
-    Model* model = ecs_get_mut(ctx, player, Model);
-    UnloadModel(*model);
-}
-
-void MessageProcessor(void)
-{
-    if (globals.server_fd <= 0)
-        return;
-
-    ssize_t received = sock_read(globals.server_fd, &globals.recv_buf);
-
-    if (received == 0 || (received == -1 && errno != EAGAIN)) {
-        globals.is_connected = false;
-        globals.server_fd = -1;
-        close(globals.server_fd);
-    }
-
-    while (len(globals.recv_buf) >= (int)sizeof(struct message)) {
-        struct message msg;
-        memcpy(&msg, globals.recv_buf, sizeof(struct message));
-        sb_consume(&globals.recv_buf, sizeof(struct message));
-
-        enqueue(&globals.message_queue, msg);
-    }
-
-    while (!q_empty(globals.message_queue)) {
-        struct message msg = dequeue(&globals.message_queue);
-
-        switch (msg.type) {
-        case MESSAGE_HELLO:
-            // TODO: instantiate entity
-            break;
-        case MESSAGE_WELCOME:
-            if (globals.is_connected)
-                TraceLog(LOG_WARNING, "Received unexpected message (welcome)");
-
-            struct message_welcome data = msg.data.welcome;
-            assert(memcmp(data.to_id, globals.name, sizeof(globals.name)) == 0);
-
-            if (data.accepted) {
-                globals.is_connected = true;
-            } else {
-                shutdown(globals.server_fd, SHUT_WR);
-                close(globals.server_fd);
-                globals.server_fd = -1;
-            }
-            break;
-        case MESSAGE_GOODBYE:
-            // TODO: remove entity
-            break;
-        case MESSAGE_GET_STATE:
-            // TODO: respond with MESSAGE_SYNC
-            break;
-        case MESSAGE_SYNC:
-            // TODO: update corresponding entity
-            break;
-        case MESSAGE_TURNING_RIGHT:
-            // TODO: update corresponding entity
-            break;
-        case MESSAGE_TURNING_LEFT:
-            // TODO: update corresponding entity
-            break;
-        case MESSAGE_WALKING_FORWARD:
-            // TODO: update corresponding entity
-            break;
-        case MESSAGE_WALKING_BACKWARD:
-            // TODO: update corresponding entity
-            break;
-        }
-    }
-
-    if (len(globals.send_buf) > 0) {
-        sock_write(globals.server_fd, &globals.send_buf);
-    }
-}
-
-void LoginScreen(void)
-{
-    static bool edit_name = false;
-    static bool edit_host = false;
-    static bool edit_port = false;
-
-    int widget_padding = 10;
-
-    Rectangle widget_pos = {
-        .x = widget_padding,
-        .y = widget_padding,
-        .height = 40
-    };
-
-    GuiSetStyle(DEFAULT, TEXT_SIZE, 20);
-
-    ClearBackground(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)));
-
-    widget_pos.width = 500;
-
-    if (GuiTextBox(widget_pos, globals.name, sizeof(globals.name), edit_name))
-        edit_name = !edit_name;
-    widget_pos.y += widget_pos.height + widget_padding;
-
-    if (GuiTextBox(widget_pos, globals.host, sizeof(globals.host), edit_host))
-        edit_host = !edit_host;
-    widget_pos.y += widget_pos.height + widget_padding;
-
-    if (GuiTextBox(widget_pos, globals.port, sizeof(globals.port), edit_port))
-        edit_port = !edit_port;
-    widget_pos.y += widget_pos.height + widget_padding;
-
-    widget_pos.width = 200;
-
-    if (GuiButton(widget_pos, "Connect") && globals.server_fd <= 0) {
-        globals.server_fd = tcp_connect(globals.host, globals.port);
-
-        if (globals.server_fd > 0) {
-            TraceLog(LOG_INFO, "Sending Hello message");
-
-            send_message(&globals.send_buf,
-                ((struct message) {
-                    .type = MESSAGE_HELLO,
-                }),
-                .from_id = globals.name);
-        }
-    }
-    widget_pos.y += widget_pos.height + widget_padding;
-
-    if (globals.server_fd == -1)
-        GuiLabel(widget_pos, "Failed to connect");
-    else if (globals.server_fd > 0)
-        GuiLabel(widget_pos, "Connecting...");
-
-    widget_pos.y += widget_pos.height + widget_padding;
-
-    if (globals.server_fd > 0) {
-        MessageProcessor();
-    }
-}
 
 int main(void)
 {
@@ -197,13 +19,13 @@ int main(void)
 
     SetTargetFPS(60);
 
+    ecs_world_t* ctx = ecs_init();
+
     while (!globals.is_connected && !WindowShouldClose()) {
         BeginDrawing();
-        LoginScreen();
+        LoginScreen(ctx);
         EndDrawing();
     }
-
-    ecs_world_t* ctx = ecs_init();
 
     ECS_COMPONENT_DEFINE(ctx, Position);
     ECS_COMPONENT_DEFINE(ctx, Direction);
@@ -229,7 +51,7 @@ int main(void)
 
     // TODO: Render player name above model
 
-    ecs_entity_t player = CreatePlayer(ctx, globals.name, MODEL_PATH);
+    ecs_entity_t player = CreatePeer(ctx, globals.name, MODEL_PATH);
 
     ecs_set(ctx,
         player, Player,
@@ -247,7 +69,7 @@ int main(void)
         BeginDrawing();
 
         if (!globals.is_connected) {
-            LoginScreen();
+            LoginScreen(ctx);
             EndDrawing();
             continue;
         }
@@ -259,7 +81,7 @@ int main(void)
         float dt = GetFrameTime();
         ecs_progress(ctx, dt);
 
-        MessageProcessor();
+        MessageProcessor(ctx);
 
         EndMode3D();
         EndDrawing();

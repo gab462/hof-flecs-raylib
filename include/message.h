@@ -97,14 +97,10 @@ struct message_opt {
     char* to_id;
 };
 
-#define send_message(buf, msg, ...) send_message_impl(buf, msg, (struct message_opt) { 0 __VA_OPT__(, ) __VA_ARGS__ })
+#define make_message(msg, ...) make_message_impl(msg, (struct message_opt) { 0 __VA_OPT__(, ) __VA_ARGS__ })
 
-static inline void
-send_message_impl(char** send_buf, struct message msg, struct message_opt opt)
+static inline struct message make_message_impl(struct message msg, struct message_opt opt)
 {
-    char buf[sizeof(msg)] = { 0 };
-    int count = sizeof(msg);
-
     if (opt.from_id != NULL || opt.to_id != NULL) {
         switch (msg.type) {
         case MESSAGE_HELLO:
@@ -137,6 +133,16 @@ send_message_impl(char** send_buf, struct message msg, struct message_opt opt)
             break;
         }
     }
+
+    return msg;
+}
+
+#define send_message(buf, msg, ...) send_message_impl(buf, make_message(msg, __VA_ARGS__))
+
+static inline void send_message_impl(char** send_buf, struct message msg)
+{
+    char buf[sizeof(msg)] = { 0 };
+    int count = sizeof(msg);
 
     memcpy(buf, &msg, count);
     push_items(send_buf, buf, count);
