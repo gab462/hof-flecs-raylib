@@ -15,7 +15,7 @@ ecs_entity_t CreatePeer(ecs_world_t* ctx, char name[ID_BUF_LEN], char* model_pat
     ecs_set(ctx, player, Position, { 0 });
     ecs_set(ctx, player, Direction, { 1.f, 0.f });
     ecs_set(ctx, player, WalkingSpeed, { 10.f });
-    ecs_set(ctx, player, RotationSpeed, { 1.f });
+    ecs_set(ctx, player, RotationSpeed, { 2.f });
     ecs_set(ctx, player, Controls, { 0 });
     ecs_set(ctx, player, AnimationState,
         {
