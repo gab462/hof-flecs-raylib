@@ -1,4 +1,6 @@
-COMMON_CFLAGS := -Wall -Wextra -Wno-unused-parameter -Wno-override-init -std=gnu11 -I include -I lib/cut/
+CC := cc
+EXTRA_CFLAGS :=
+COMMON_CFLAGS := -Wall -Wextra -Wno-unused-parameter -Wno-override-init -std=gnu11 -I include -I lib/cut/ $(EXTRA_CFLAGS)
 COMMON_HDR := $(wildcard include/*.h)
 
 DEBUG := 0
@@ -29,10 +31,10 @@ endif
 all: client server
 
 client: $(CLIENT_SRC) $(CLIENT_HDR)
-	cc $(CLIENT_SRC) $(CLIENT_CFLAGS) -o $@
+	$(CC) $(CLIENT_SRC) $(CLIENT_CFLAGS) -o $@
 
 server: $(SERVER_SRC) $(SERVER_HDR)
-	cc $(SERVER_SRC) $(SERVER_CFLAGS) -o $@
+	$(CC) $(SERVER_SRC) $(SERVER_CFLAGS) -o $@
 
 client.exe: $(CLIENT_SRC) $(CLIENT_HDR)
 	x86_64-w64-mingw32-gcc $(wildcard src/client/*.c) lib/flecs/distr/flecs.c -Wl,--whole-archive lib/raylib/src/libraylib.a -Wl,--no-whole-archive $(COMMON_CFLAGS) -O2 -I include/client/ -I lib/flecs/distr/ -I lib/raylib/src/ -I lib/raygui/src/ -lm -lgdi32 -lwinmm -lws2_32 -limagehlp -static-libgcc -static -o $@
