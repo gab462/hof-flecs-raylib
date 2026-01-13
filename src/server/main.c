@@ -26,17 +26,23 @@ void disconnect_peer(struct peer* peer)
     da_reset(&peer->recv_buf);
     da_reset(&peer->send_buf);
 
+    bool in_world = false;
+
     for (int i = 0; i < len(peers); i++) {
-        if (peers[i] == peer)
+        if (peers[i] == peer) {
             swap_delete(&peers, i);
+            in_world = true;
+        }
     }
 
-    foreach (player, peers) {
-        send_message(&(*player)->send_buf,
-            ((struct message) {
-                .type = MESSAGE_GOODBYE,
-            }),
-            .from_id = peer->name);
+    if (in_world) {
+        foreach (player, peers) {
+            send_message(&(*player)->send_buf,
+                ((struct message) {
+                    .type = MESSAGE_GOODBYE,
+                }),
+                .from_id = peer->name);
+        }
     }
 }
 
@@ -74,8 +80,6 @@ void message_handler(struct task_context* ctx, int fd, struct sockaddr_in addr)
     printf("Received connection from %s\n", ip);
 
     self->fd = fd;
-
-    push(&peers, self);
 
     for (;;) {
         ssize_t received = sock_read(fd, &self->recv_buf);
@@ -119,12 +123,12 @@ void message_handler(struct task_context* ctx, int fd, struct sockaddr_in addr)
 
                 // Close connection and exit if not accepted
                 if (!accepted) {
-                    close(self->fd);
-                    da_reset(&self->recv_buf);
-                    da_reset(&self->send_buf);
+                    disconnect_peer(self);
                     task_abort(ctx);
                     break;
                 }
+
+                push(&peers, self);
 
                 printf("Player '%s' joined\n", data.from_id);
 
