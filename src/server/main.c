@@ -101,13 +101,30 @@ void message_handler(struct task_context* ctx, int fd, struct sockaddr_in addr)
             case MESSAGE_HELLO: {
                 struct message_hello data = msg.data.hello;
 
-                // TODO: prevent name duplication
+                bool accepted = true;
+
+                foreach (peer, peers) {
+                    if (strncmp((*peer)->name, data.from_id, ID_BUF_LEN) == 0) {
+                        printf("Player tried to connect with duplicate name (%s)\n", data.from_id);
+                        accepted = false; // Do not accept if duplicate name
+                    }
+                }
+
                 send_message(&self->send_buf,
                     ((struct message) {
                         .type = MESSAGE_WELCOME,
-                        .data.welcome.accepted = true,
+                        .data.welcome.accepted = accepted,
                     }),
                     .to_id = data.from_id);
+
+                // Close connection and exit if not accepted
+                if (!accepted) {
+                    close(self->fd);
+                    da_reset(&self->recv_buf);
+                    da_reset(&self->send_buf);
+                    task_abort(ctx);
+                    break;
+                }
 
                 printf("Player '%s' joined\n", data.from_id);
 
