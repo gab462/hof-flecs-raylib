@@ -1,19 +1,15 @@
-#include <arpa/inet.h>
 #include <assert.h>
 #include <cut.h>
-#include <errno.h>
 #include <message.h>
 #include <sock.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/socket.h>
-#include <task.h>
 #include <tcp_task.h>
 
 struct peer {
     char name[ID_BUF_LEN];
-    int fd;
+    socket_t sock;
     char* recv_buf;
     char* send_buf;
 };
@@ -22,7 +18,7 @@ struct peer** peers = NULL;
 
 void disconnect_peer(struct peer* peer)
 {
-    close(peer->fd);
+    sock_close(peer->sock);
     da_reset(&peer->recv_buf);
     da_reset(&peer->send_buf);
 
@@ -68,7 +64,7 @@ void broadcast_message(struct message msg, struct peer* sender)
     }
 }
 
-void message_handler(struct task_context* ctx, int fd, struct sockaddr_in addr)
+void message_handler(struct task_context* ctx, socket_t sock, struct sockaddr_in addr)
 {
     struct peer* self = task_ctx_alloc(ctx, struct peer);
 
@@ -79,12 +75,12 @@ void message_handler(struct task_context* ctx, int fd, struct sockaddr_in addr)
 
     printf("Received connection from %s\n", ip);
 
-    self->fd = fd;
+    self->sock = sock;
 
     for (;;) {
-        ssize_t received = sock_read(fd, &self->recv_buf);
+        int received = sock_read(sock, &self->recv_buf);
 
-        if (received == 0 || (received == -1 && errno != EAGAIN)) { // Connection closed or error
+        if (received == 0 || (received == -1 && sock_error() != SOCK_WOULDBLOCK)) { // Connection closed or error
             printf("Lost connection to peer\n");
             disconnect_peer(self);
             task_abort(ctx);
@@ -182,7 +178,7 @@ void message_handler(struct task_context* ctx, int fd, struct sockaddr_in addr)
         }
 
         if (len(self->send_buf) > 0)
-            sock_write(fd, &self->send_buf);
+            sock_write(sock, &self->send_buf);
 
         task_yield(ctx);
     }
@@ -197,16 +193,18 @@ int main(int argc, char* argv[])
         return -1;
     }
 
+    sock_init();
+
     short port = atoi(argv[1]);
 
-    int fd = tcp_listen(port);
-    assert(fd != -1);
+    socket_t sock = tcp_listen(port);
+    assert(sock != SOCK_INVALID);
 
     printf("Listening on localhost:%d...\n", port);
 
     struct task_context ctx = { 0 };
     for (;;) {
-        tcp_server(&ctx, fd, message_handler);
+        tcp_server(&ctx, sock, message_handler);
         usleep(8000);
     }
 

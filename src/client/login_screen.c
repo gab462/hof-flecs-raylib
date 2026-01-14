@@ -10,6 +10,7 @@ void LoginScreen(ecs_world_t* ctx)
     static bool edit_name = false;
     static bool edit_host = false;
     static bool edit_port = false;
+    static bool tried_connecting = false;
 
     int widget_padding = 10;
 
@@ -39,10 +40,11 @@ void LoginScreen(ecs_world_t* ctx)
 
     widget_pos.width = 200;
 
-    if (GuiButton(widget_pos, "Connect") && globals.server_fd <= 0) {
-        globals.server_fd = tcp_connect(globals.host, globals.port);
+    if (GuiButton(widget_pos, "Connect") && globals.server_sock == SOCK_INVALID) {
+        tried_connecting = true;
+        globals.server_sock = tcp_connect(globals.host, globals.port);
 
-        if (globals.server_fd > 0) {
+        if (globals.server_sock != SOCK_INVALID) {
             TraceLog(LOG_INFO, "Sending Hello message");
 
             send_message(&globals.send_buf,
@@ -54,10 +56,12 @@ void LoginScreen(ecs_world_t* ctx)
     }
     widget_pos.y += widget_pos.height + widget_padding;
 
-    if (globals.server_fd == -1)
-        GuiLabel(widget_pos, "Failed to connect");
-    else if (globals.server_fd > 0)
-        GuiLabel(widget_pos, "Connecting...");
+    if (tried_connecting) {
+        if (globals.server_sock == SOCK_INVALID)
+            GuiLabel(widget_pos, "Failed to connect");
+        else if (globals.server_sock != SOCK_INVALID)
+            GuiLabel(widget_pos, "Connecting...");
+    }
 
     widget_pos.y += widget_pos.height + widget_padding;
 

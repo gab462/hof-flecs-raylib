@@ -46,6 +46,8 @@ int main(void)
     ECS_SYSTEM(ctx, RenderName, 0, // Ran manually outside of BeginMode3D
         [in] Position, [in] Nametag);
 
+    sock_init();
+
     while (!globals.is_connected && !WindowShouldClose()) {
         BeginDrawing();
         LoginScreen(ctx);

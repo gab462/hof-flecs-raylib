@@ -1,26 +1,24 @@
 #include <components.h>
 #include <config.h>
-#include <errno.h>
 #include <flecs.h>
 #include <globals.h>
 #include <message.h>
 #include <message_processor.h>
 #include <peer.h>
 #include <sock.h>
-#include <sys/socket.h>
 #include <systems.h>
 
 void MessageProcessor(ecs_world_t* ctx)
 {
-    if (globals.server_fd <= 0)
+    if (globals.server_sock == SOCK_INVALID)
         return;
 
-    ssize_t received = sock_read(globals.server_fd, &globals.recv_buf);
+    int received = sock_read(globals.server_sock, &globals.recv_buf);
 
-    if (received == 0 || (received == -1 && errno != EAGAIN)) {
+    if (received == 0 || (received == -1 && sock_error() != SOCK_WOULDBLOCK)) {
         globals.is_connected = false;
-        globals.server_fd = -1;
-        close(globals.server_fd);
+        globals.server_sock = SOCK_INVALID;
+        sock_close(globals.server_sock);
     }
 
     while (len(globals.recv_buf) >= (int)sizeof(struct message)) {
@@ -50,9 +48,8 @@ void MessageProcessor(ecs_world_t* ctx)
             if (data.accepted) {
                 globals.is_connected = true;
             } else {
-                shutdown(globals.server_fd, SHUT_WR);
-                close(globals.server_fd);
-                globals.server_fd = -1;
+                sock_close(globals.server_sock);
+                globals.server_sock = SOCK_INVALID;
             }
         } break;
         case MESSAGE_GOODBYE: {
@@ -150,6 +147,6 @@ void MessageProcessor(ecs_world_t* ctx)
     }
 
     if (len(globals.send_buf) > 0) {
-        sock_write(globals.server_fd, &globals.send_buf);
+        sock_write(globals.server_sock, &globals.send_buf);
     }
 }
