@@ -5,6 +5,7 @@ clang
 -std=gnu11
 -Iinclude
 -Iinclude/client
+-Iinclude/server
 -Ilib/flecs/distr
 -Ilib/raylib/src
 -Ilib/raygui/src

@@ -1,68 +1,12 @@
 #include <assert.h>
 #include <cut.h>
 #include <message.h>
+#include <server_peer.h>
 #include <sock.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <tcp_task.h>
-
-struct peer {
-    char name[ID_BUF_LEN];
-    socket_t sock;
-    char* recv_buf;
-    char* send_buf;
-};
-
-struct peer** peers = NULL;
-
-void disconnect_peer(struct peer* peer)
-{
-    sock_close(peer->sock);
-    da_reset(&peer->recv_buf);
-    da_reset(&peer->send_buf);
-
-    bool in_world = false;
-
-    for (int i = 0; i < len(peers); i++) {
-        if (peers[i] == peer) {
-            swap_delete(&peers, i);
-            in_world = true;
-        }
-    }
-
-    if (in_world) {
-        foreach (player, peers) {
-            send_message(&(*player)->send_buf,
-                ((struct message) {
-                    .type = MESSAGE_GOODBYE,
-                }),
-                .from_id = peer->name);
-        }
-    }
-}
-
-struct peer* get_peer(char name[ID_BUF_LEN])
-{
-    foreach (peer, peers) {
-        if (strncmp(name, (*peer)->name, ID_BUF_LEN) == 0)
-            return *peer;
-    }
-
-    printf("Peer %s not found\n", name);
-
-    return NULL;
-}
-
-void broadcast_message(struct message msg, struct peer* sender)
-{
-    foreach (peer, peers) {
-        if (*peer == sender)
-            continue;
-
-        send_message(&(*peer)->send_buf, msg);
-    }
-}
 
 void message_handler(struct task_context* ctx, socket_t sock, struct sockaddr_in addr)
 {
@@ -103,11 +47,9 @@ void message_handler(struct task_context* ctx, socket_t sock, struct sockaddr_in
 
                 bool accepted = true;
 
-                foreach (peer, peers) {
-                    if (strncmp((*peer)->name, data.from_id, ID_BUF_LEN) == 0) {
-                        printf("Player tried to connect with duplicate name (%s)\n", data.from_id);
-                        accepted = false; // Do not accept if duplicate name
-                    }
+                if (!unique_peer_name(data.from_id)) {
+                    printf("Player tried to connect with duplicate name (%s)\n", data.from_id);
+                    accepted = false; // Do not accept if duplicate name
                 }
 
                 send_message(&self->send_buf,
@@ -124,33 +66,11 @@ void message_handler(struct task_context* ctx, socket_t sock, struct sockaddr_in
                     break;
                 }
 
-                push(&peers, self);
-
-                printf("Player '%s' joined\n", data.from_id);
-
                 snprintf(self->name, ID_BUF_LEN, "%s", data.from_id);
 
-                // Instantiate user in all peers
-                broadcast_message(msg, self);
+                connect_peer(self, msg);
 
-                foreach (peer, peers) {
-                    if (*peer == self)
-                        continue;
-
-                    // Instantiate peer in user session
-                    send_message(&self->send_buf,
-                        ((struct message) {
-                            .type = MESSAGE_HELLO,
-                        }),
-                        .from_id = (*peer)->name);
-
-                    // Sync state from peer in user session
-                    send_message(&(*peer)->send_buf,
-                        ((struct message) {
-                            .type = MESSAGE_GET_STATE,
-                        }),
-                        .from_id = self->name);
-                }
+                printf("Player '%s' joined\n", data.from_id);
             } break;
             case MESSAGE_WELCOME:
                 printf("Client sent unexpected message (welcome)\n");
