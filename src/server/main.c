@@ -1,3 +1,4 @@
+#include "task.h"
 #include <assert.h>
 #include <cut.h>
 #include <message.h>
@@ -7,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <tcp_task.h>
+#include <whitelist.h>
 
 void message_handler(struct task_context* ctx, socket_t sock, struct sockaddr_in addr)
 {
@@ -14,12 +16,17 @@ void message_handler(struct task_context* ctx, socket_t sock, struct sockaddr_in
 
     task_begin(ctx);
 
+    self->sock = sock;
+
     char* ip = inet_ntoa(addr.sin_addr);
-    // TODO: optional whitelist
+
+    if (!in_whitelist(ip)) {
+        printf("%s connected but not in whitelist\n", ip);
+        disconnect_peer(self);
+        task_abort(ctx);
+    }
 
     printf("Received connection from %s\n", ip);
-
-    self->sock = sock;
 
     for (;;) {
         int received = sock_read(sock, &self->recv_buf);
@@ -112,6 +119,8 @@ int main(int argc, char* argv[])
         printf("Usage: %s PORT\n", argv[0]);
         return -1;
     }
+
+    whitelist_setup("whitelist.txt");
 
     sock_init();
 
