@@ -15,6 +15,7 @@ enum control_state {
 };
 
 extern ECS_COMPONENT_DECLARE(Model);
+extern ECS_COMPONENT_DECLARE(Texture2D);
 
 typedef Vector3 Position;
 extern ECS_COMPONENT_DECLARE(Position);
@@ -51,3 +52,9 @@ typedef struct {
     const char* name;
 } Nametag;
 extern ECS_COMPONENT_DECLARE(Nametag);
+
+typedef struct {
+    Rectangle source;
+    Vector2 size;
+} TextureParams;
+extern ECS_COMPONENT_DECLARE(TextureParams);

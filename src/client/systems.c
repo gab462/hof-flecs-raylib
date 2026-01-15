@@ -35,7 +35,25 @@ void RenderName(ecs_iter_t* it)
 
         Vector2 screen_pos = GetWorldToScreen(tag_position, *globals.camera);
 
-        DrawText(n[i].name, (int)screen_pos.x - MeasureText(n[i].name, font_size) / 2, (int)screen_pos.y, font_size, BLACK);
+        DrawText(n[i].name,
+            (int)screen_pos.x - MeasureText(n[i].name, font_size) / 2,
+            (int)screen_pos.y,
+            font_size, BLACK);
+    }
+}
+
+void RenderPainting(ecs_iter_t* it)
+{
+    Position* p = ecs_field(it, Position, 0);
+    Texture2D* t = ecs_field(it, Texture2D, 1);
+    TextureParams* pr = ecs_field(it, TextureParams, 2);
+
+    for (int i = 0; i < it->count; i++) {
+        DrawBillboardPro(*globals.camera,
+            t[i], pr[i].source, p[i],
+            (Vector3) { .y = 1.f }, pr[i].size,
+            Vector2Scale(pr[i].size, 0.5f), 0.f,
+            WHITE);
     }
 }
 
@@ -110,7 +128,12 @@ void KeyboardControls(ecs_iter_t* it)
     // Player *p = ecs_field(it, Player, 1);
 
     int keys[] = { KEY_W, KEY_A, KEY_S, KEY_D };
-    int types[] = { MESSAGE_WALKING_FORWARD, MESSAGE_TURNING_LEFT, MESSAGE_WALKING_BACKWARD, MESSAGE_TURNING_RIGHT };
+    int types[] = {
+        MESSAGE_WALKING_FORWARD,
+        MESSAGE_TURNING_LEFT,
+        MESSAGE_WALKING_BACKWARD,
+        MESSAGE_TURNING_RIGHT,
+    };
 
     for (int i = 0; i < it->count; i++) {
         for (int j = 0; j < 4; j++) {

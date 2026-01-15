@@ -7,6 +7,7 @@
 #include <login_screen.h>
 #include <message.h>
 #include <message_processor.h>
+#include <painting.h>
 #include <peer.h>
 #include <raygui.h>
 #include <raylib.h>
@@ -28,10 +29,10 @@ int main(void)
     ECS_COMPONENT_DEFINE(ctx, Controls);
     ECS_COMPONENT_DEFINE(ctx, AnimationState);
     ECS_COMPONENT_DEFINE(ctx, Model);
+    ECS_COMPONENT_DEFINE(ctx, Texture2D);
     ECS_COMPONENT_DEFINE(ctx, Player);
     ECS_COMPONENT_DEFINE(ctx, Nametag);
-
-    // TODO: billboard component
+    ECS_COMPONENT_DEFINE(ctx, TextureParams);
 
     ECS_SYSTEM(ctx, KeyboardControls, EcsOnUpdate,
         Controls, [in] Player);
@@ -45,6 +46,8 @@ int main(void)
         [in] Position, [in] Direction, [in] Model);
     ECS_SYSTEM(ctx, RenderName, 0, // Ran manually outside of BeginMode3D
         [in] Position, [in] Nametag);
+    ECS_SYSTEM(ctx, RenderPainting, EcsOnUpdate,
+        [in] Position, [in] Texture2D, [in] TextureParams);
 
     sock_init();
 
@@ -54,16 +57,20 @@ int main(void)
         EndDrawing();
     }
 
+    CreatePainting(ctx, "assets/raylib_logo.png", PAINTING_WIDTH);
+
     ecs_entity_t player = CreatePeer(ctx, globals.name, MODEL_PATH);
 
     ecs_set(ctx,
         player, Player,
-        { .camera = {
-              .up = { 0.f, 1.f, 0.f },
-              .fovy = 45.f,
-              .projection = CAMERA_PERSPECTIVE,
-          },
-            .distance = 15.f });
+        {
+            .camera = {
+                .up = { 0.f, 1.f, 0.f },
+                .fovy = 45.f,
+                .projection = CAMERA_PERSPECTIVE,
+            },
+            .distance = 15.f,
+        });
 
     const Player* player_state = ecs_get(ctx, player, Player);
     globals.camera = &player_state->camera;
@@ -94,10 +101,12 @@ int main(void)
     }
 
     ecs_query_t* q = ecs_query(ctx,
-        { .terms = {
-              { ecs_id(Model) },
-              { ecs_id(AnimationState) },
-          } });
+        {
+            .terms = {
+                { ecs_id(Model) },
+                { ecs_id(AnimationState) },
+            },
+        });
 
     ecs_iter_t it = ecs_query_iter(ctx, q);
 
@@ -108,6 +117,25 @@ int main(void)
         for (int i = 0; i < it.count; i++) {
             UnloadModelAnimations(s[i].animations, s[i].count);
             UnloadModel(m[i]);
+        }
+    }
+
+    ecs_query_fini(q);
+
+    q = ecs_query(ctx,
+        {
+            .terms = {
+                { ecs_id(Texture2D) },
+            },
+        });
+
+    it = ecs_query_iter(ctx, q);
+
+    while (ecs_query_next(&it)) {
+        Texture2D* t = ecs_field(&it, Texture2D, 0);
+
+        for (int i = 0; i < it.count; i++) {
+            UnloadTexture(*t);
         }
     }
 
