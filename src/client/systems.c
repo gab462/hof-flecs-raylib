@@ -114,11 +114,12 @@ void MoveCamera(ecs_iter_t* it)
 
         pl[i].camera.position = (Vector3) {
             p[i].x - d[i].x * pl[i].distance,
-            pl[i].distance / 2.f,
+            pl[i].distance / 4.f,
             p[i].z - d[i].y * pl[i].distance,
         };
 
         pl[i].camera.target = p[i];
+        pl[i].camera.target.y += pl[i].distance / 3.f; // Decrease empty space at the bottom
     }
 }
 
