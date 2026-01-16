@@ -39,6 +39,7 @@ typedef struct {
     int count;
     int current;
     int frame;
+    int speed;
 } AnimationState;
 extern ECS_COMPONENT_DECLARE(AnimationState);
 

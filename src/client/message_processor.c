@@ -134,15 +134,37 @@ void MessageProcessor(ecs_world_t* ctx)
 
             if (data.state == true) {
                 anim->current = PLAYER_WALKING_ANIMATION;
+                anim->speed = 1;
                 c->state |= CONTROL_WALKING_FORWARD;
             } else {
                 anim->current = PLAYER_IDLE_ANIMATION;
+                anim->speed = 1;
                 c->state &= ~CONTROL_WALKING_FORWARD;
             }
         } break;
-        case MESSAGE_WALKING_BACKWARD:
-            // TODO: implement backwards animation
-            break;
+        case MESSAGE_WALKING_BACKWARD: {
+            struct message_walking_backward data = msg.data.walking_backward;
+
+            ecs_entity_t e = ecs_lookup(ctx, data.from_id);
+
+            if (e == 0) {
+                TraceLog(LOG_WARNING, "Entity %s not found", data.from_id);
+                break;
+            }
+
+            Controls* c = ecs_get_mut(ctx, e, Controls);
+            AnimationState* anim = ecs_get_mut(ctx, e, AnimationState);
+
+            if (data.state == true) {
+                anim->current = PLAYER_WALKING_ANIMATION;
+                anim->speed = -1;
+                c->state |= CONTROL_WALKING_BACKWARD;
+            } else {
+                anim->current = PLAYER_IDLE_ANIMATION;
+                anim->speed = 1;
+                c->state &= ~CONTROL_WALKING_BACKWARD;
+            }
+        } break;
         }
     }
 
