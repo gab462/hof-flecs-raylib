@@ -57,6 +57,9 @@ int main(void)
         EndDrawing();
     }
 
+    if (WindowShouldClose())
+        return 0;
+
     FilePathList files = LoadDirectoryFiles(PAINTING_DIR);
 
     for (size_t i = 0; i < files.count; i++) {
