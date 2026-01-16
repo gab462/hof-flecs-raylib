@@ -15,3 +15,5 @@ void Animate(ecs_iter_t* it);
 void MoveCamera(ecs_iter_t* it);
 
 void KeyboardControls(ecs_iter_t* it);
+
+void SyncPeers(ecs_iter_t* it);

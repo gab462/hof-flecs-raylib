@@ -168,3 +168,14 @@ void KeyboardControls(ecs_iter_t* it)
         }
     }
 }
+
+void SyncPeers(ecs_iter_t* it)
+{
+    (void)it;
+
+    send_message(&globals.send_buf,
+        ((struct message) {
+            .type = MESSAGE_GET_STATE,
+        }),
+        .from_id = globals.name);
+}
