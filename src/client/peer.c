@@ -28,6 +28,7 @@ ecs_entity_t CreatePeer(ecs_world_t* ctx, char name[ID_BUF_LEN], char* model_pat
         {
             .name = ecs_get_name(ctx, player),
             .height = 3.f,
+            .font_size = 20,
         });
 
     return player;

@@ -51,6 +51,7 @@ extern ECS_COMPONENT_DECLARE(Player);
 typedef struct {
     const char* name;
     float height;
+    int font_size;
 } Nametag;
 extern ECS_COMPONENT_DECLARE(Nametag);
 

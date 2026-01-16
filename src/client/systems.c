@@ -27,8 +27,6 @@ void RenderName(ecs_iter_t* it)
     Position* p = ecs_field(it, Position, 0);
     Nametag* n = ecs_field(it, Nametag, 1);
 
-    int font_size = 20;
-
     for (int i = 0; i < it->count; i++) {
         Vector3 tag_position = p[i];
         tag_position.y += n[i].height;
@@ -36,9 +34,9 @@ void RenderName(ecs_iter_t* it)
         Vector2 screen_pos = GetWorldToScreen(tag_position, *globals.camera);
 
         DrawText(n[i].name,
-            (int)screen_pos.x - MeasureText(n[i].name, font_size) / 2,
+            (int)screen_pos.x - MeasureText(n[i].name, n[i].font_size) / 2,
             (int)screen_pos.y,
-            font_size, BLACK);
+            n[i].font_size, BLACK);
     }
 }
 
