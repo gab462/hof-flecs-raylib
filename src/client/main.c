@@ -14,6 +14,11 @@
 #include <systems.h>
 #include <tcp.h>
 
+int SortAlphabetical(const void* a, const void* b)
+{
+    return strcmp(*(const char**)a, *(const char**)b);
+}
+
 int main(void)
 {
     InitWindow(1600, 1200, "Hall of Fame");
@@ -61,6 +66,9 @@ int main(void)
         return 0;
 
     FilePathList files = LoadDirectoryFiles(PAINTING_DIR);
+
+    // sort files to ensure alphabetical order
+    qsort(files.paths, files.count, sizeof(files.paths[0]), SortAlphabetical);
 
     for (size_t i = 0; i < files.count; i++) {
         CreatePainting(ctx, files.paths[i], 10.f * i, 10.f, PAINTING_WIDTH);
