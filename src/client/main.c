@@ -16,7 +16,7 @@
 
 int main(void)
 {
-    InitWindow(800, 600, "Hall of Fame");
+    InitWindow(1600, 1200, "Hall of Fame");
 
     SetTargetFPS(60);
 
@@ -57,7 +57,11 @@ int main(void)
         EndDrawing();
     }
 
-    CreatePainting(ctx, "assets/raylib_logo.png", 10.f, 0.f, PAINTING_WIDTH);
+    FilePathList files = LoadDirectoryFiles(PAINTING_DIR);
+
+    for (size_t i = 0; i < files.count; i++) {
+        CreatePainting(ctx, files.paths[i], 10.f * i, 10.f, PAINTING_WIDTH);
+    }
 
     ecs_entity_t player = CreatePeer(ctx, globals.name, MODEL_PATH);
 
@@ -69,7 +73,7 @@ int main(void)
                 .fovy = 45.f,
                 .projection = CAMERA_PERSPECTIVE,
             },
-            .distance = 15.f,
+            .distance = 20.f,
         });
 
     const Player* player_state = ecs_get(ctx, player, Player);

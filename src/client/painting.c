@@ -1,3 +1,4 @@
+#include "config.h"
 #include <components.h>
 #include <painting.h>
 #include <raylib.h>
@@ -17,8 +18,8 @@ void CreatePainting(ecs_world_t* ctx, char* texture_path, float x, float z, floa
         });
     ecs_set(ctx, painting, Nametag,
         {
-            .name = texture_path,
+            .name = strlen(texture_path) > strlen(PAINTING_DIR) + 1 ? texture_path + strlen(PAINTING_DIR) + 1 : texture_path,
             .height = 0.f,
-            .font_size = 10,
+            .font_size = 15,
         });
 }
