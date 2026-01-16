@@ -1,5 +1,8 @@
 #pragma once
 
+#define SCREEN_WIDTH 1600
+#define SCREEN_HEIGHT 1200
+
 #define MODEL_PATH "assets/robot.glb"
 
 #define PLAYER_IDLE_ANIMATION 2

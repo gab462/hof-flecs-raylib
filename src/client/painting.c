@@ -20,6 +20,6 @@ void CreatePainting(ecs_world_t* ctx, char* texture_path, float x, float z, floa
         {
             .name = strlen(texture_path) > strlen(PAINTING_DIR) + 1 ? texture_path + strlen(PAINTING_DIR) + 1 : texture_path,
             .height = 0.f,
-            .font_size = 15,
+            .font_size = 20,
         });
 }

@@ -21,7 +21,7 @@ int SortAlphabetical(const void* a, const void* b)
 
 int main(void)
 {
-    InitWindow(1600, 1200, "Hall of Fame");
+    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Hall of Fame");
 
     SetTargetFPS(60);
 
@@ -104,7 +104,7 @@ int main(void)
 
         ClearBackground(RAYWHITE);
         BeginMode3D(*globals.camera);
-        DrawGrid(512, 1.f);
+        DrawGrid(2048, 1.f);
 
         float dt = GetFrameTime();
         ecs_progress(ctx, dt);
