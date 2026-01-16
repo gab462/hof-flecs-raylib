@@ -50,6 +50,7 @@ extern ECS_COMPONENT_DECLARE(Player);
 
 typedef struct {
     const char* name;
+    float height;
 } Nametag;
 extern ECS_COMPONENT_DECLARE(Nametag);
 

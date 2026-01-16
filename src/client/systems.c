@@ -31,7 +31,7 @@ void RenderName(ecs_iter_t* it)
 
     for (int i = 0; i < it->count; i++) {
         Vector3 tag_position = p[i];
-        tag_position.y += 3.f;
+        tag_position.y += n[i].height;
 
         Vector2 screen_pos = GetWorldToScreen(tag_position, *globals.camera);
 
