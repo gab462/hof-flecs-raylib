@@ -110,6 +110,8 @@ void MoveCamera(ecs_iter_t* it)
     Player* pl = ecs_field(it, Player, 2);
 
     for (int i = 0; i < it->count; i++) {
+        pl[i].distance -= GetMouseWheelMove();
+
         pl[i].camera.position = (Vector3) {
             p[i].x - d[i].x * pl[i].distance,
             pl[i].distance / 2.f,
