@@ -31,6 +31,15 @@ void RenderName(ecs_iter_t* it)
         Vector3 tag_position = p[i];
         tag_position.y += n[i].height;
 
+        Vector3 to_point = Vector3Subtract(tag_position, globals.camera->position);
+        Vector3 to_target = Vector3Subtract(globals.camera->target, globals.camera->position);
+
+        if (Vector3DotProduct(Vector3Normalize(to_point), Vector3Normalize(to_target)) <= 0.f)
+            continue; // Behind camera
+
+        if (fabsf(Vector3Distance(globals.camera->target, tag_position)) > 20.f)
+            continue; // Too far
+
         Vector2 screen_pos = GetWorldToScreen(tag_position, *globals.camera);
 
         DrawText(n[i].name,
