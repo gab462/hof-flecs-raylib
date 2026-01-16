@@ -28,13 +28,6 @@ void connect_peer(struct peer* self, struct message hello_message)
                 .type = MESSAGE_HELLO,
             }),
             .from_id = (*peer)->name);
-
-        // Sync state from peer in user session
-        send_message(&(*peer)->send_buf,
-            ((struct message) {
-                .type = MESSAGE_GET_STATE,
-            }),
-            .from_id = self->name);
     }
 
     push(&peers, self);

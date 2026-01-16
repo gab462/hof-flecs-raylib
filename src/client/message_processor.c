@@ -47,6 +47,12 @@ void MessageProcessor(ecs_world_t* ctx)
 
             if (data.accepted) {
                 globals.is_connected = true;
+
+                send_message(&globals.send_buf,
+                    ((struct message) {
+                        .type = MESSAGE_GET_STATE,
+                    }),
+                    .from_id = data.to_id);
             } else {
                 sock_close(globals.server_sock);
                 globals.server_sock = SOCK_INVALID;
