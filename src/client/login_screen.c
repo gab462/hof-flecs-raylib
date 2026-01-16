@@ -12,19 +12,19 @@ void LoginScreen(ecs_world_t* ctx)
     static bool edit_port = false;
     static bool tried_connecting = false;
 
-    int widget_padding = 10;
+    int widget_padding = 20;
 
     Rectangle widget_pos = {
         .x = widget_padding,
         .y = widget_padding,
-        .height = 40
+        .height = 80
     };
 
-    GuiSetStyle(DEFAULT, TEXT_SIZE, 20);
+    GuiSetStyle(DEFAULT, TEXT_SIZE, 40);
 
     ClearBackground(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)));
 
-    widget_pos.width = 500;
+    widget_pos.width = 1000;
 
     if (GuiTextBox(widget_pos, globals.name, sizeof(globals.name), edit_name))
         edit_name = !edit_name;
@@ -38,7 +38,7 @@ void LoginScreen(ecs_world_t* ctx)
         edit_port = !edit_port;
     widget_pos.y += widget_pos.height + widget_padding;
 
-    widget_pos.width = 200;
+    widget_pos.width = 400;
 
     if (GuiButton(widget_pos, "Connect") && globals.server_sock == SOCK_INVALID) {
         tried_connecting = true;
