@@ -57,7 +57,7 @@ int main(void)
         EndDrawing();
     }
 
-    CreatePainting(ctx, "assets/raylib_logo.png", PAINTING_WIDTH);
+    CreatePainting(ctx, "assets/raylib_logo.png", 10.f, 0.f, PAINTING_WIDTH);
 
     ecs_entity_t player = CreatePeer(ctx, globals.name, MODEL_PATH);
 

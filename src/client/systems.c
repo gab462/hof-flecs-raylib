@@ -50,8 +50,8 @@ void RenderPainting(ecs_iter_t* it)
         DrawBillboardPro(*globals.camera,
             t[i], pr[i].source, p[i],
             (Vector3) { .y = 1.f }, pr[i].size,
-            Vector2Scale(pr[i].size, 0.5f), 0.f,
-            WHITE);
+            (Vector2) { pr[i].size.x / 2.f },
+            0.f, WHITE);
     }
 }
 
