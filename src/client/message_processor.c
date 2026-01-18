@@ -85,6 +85,11 @@ void MessageProcessor(ecs_world_t* ctx)
 
             ecs_entity_t e = ecs_lookup(ctx, data.from_id);
 
+            if (e == 0) {
+                TraceLog(LOG_WARNING, "Entity %s not found", data.from_id);
+                break;
+            }
+
             *ecs_get_mut(ctx, e, Position) = data.position;
             *ecs_get_mut(ctx, e, Direction) = data.direction;
             ecs_get_mut(ctx, e, WalkingSpeed)->value = data.walking_speed;
