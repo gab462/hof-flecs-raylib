@@ -55,7 +55,7 @@ int main(void)
         [in] Position, [in] Texture2D, [in] TextureParams);
 
     ECS_SYSTEM(ctx, SyncPeers, EcsOnUpdate, 0);
-    ecs_set_interval(ctx, ecs_id(SyncPeers), 0.1f);
+    ecs_set_interval(ctx, ecs_id(SyncPeers), 10.f);
 
     sock_init();
 
